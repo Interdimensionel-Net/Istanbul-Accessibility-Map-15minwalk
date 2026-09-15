@@ -603,6 +603,7 @@ a.btn { text-decoration: none; }
   "use strict";
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const BUILD = "__BUILD__"; // stamped by scripts/build_web.py so a new publish bypasses cached data
   const BANDS = [900];
   const BAND_VAR = { 300: "--band-5", 600: "--band-10", 900: "--band-15" };
   const OPS = ["Metro İstanbul", "TCDD Taşımacılık", "İETT"];
@@ -698,11 +699,11 @@ a.btn { text-decoration: none; }
   applyBase();
 
   Promise.all([
-    fetch("meta.json").then((r) => r.json()),
-    fetch("bands.geojson").then((r) => r.json()),
-    fetch("provinces.geojson").then((r) => r.json()),
-    fetch("routes.geojson").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    fetch("basemap.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    fetch(`meta.json?v=${BUILD}`).then((r) => r.json()),
+    fetch(`bands.geojson?v=${BUILD}`).then((r) => r.json()),
+    fetch(`provinces.geojson?v=${BUILD}`).then((r) => r.json()),
+    fetch(`routes.geojson?v=${BUILD}`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    fetch(`basemap.json?v=${BUILD}`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
   ]).then(([m, b, land, routes, basemap]) => {
     staticBase = basemap;
     meta = m;
@@ -726,7 +727,7 @@ a.btn { text-decoration: none; }
     if (staticBase && staticBase.layers) {
       // Pre-rendered OpenStreetMap sheets for hosts that block live tiles. Live tiles cover them when they load.
       map.createPane("basemap").style.zIndex = 180;
-      staticBase.layers.forEach((l) => L.imageOverlay(l.file, l.bounds, { pane: "basemap", interactive: false }).addTo(map));
+      staticBase.layers.forEach((l) => L.imageOverlay(`${l.file}?v=${BUILD}`, l.bounds, { pane: "basemap", interactive: false }).addTo(map));
     }
     meta.stations.forEach((s) => stationsById.set(String(s.sid), s));
     meta.lines.forEach((l) => state.lines.add(l.line));

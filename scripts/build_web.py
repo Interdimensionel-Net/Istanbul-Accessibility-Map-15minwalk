@@ -8,6 +8,7 @@ Usage: uv run python scripts/build_web.py
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -18,6 +19,7 @@ from walkshed.config import DEFAULT_CONFIG, PROJECT_ROOT
 
 LEAFLET_CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
 PLACEHOLDER = "/* __LEAFLET_CSS__ */"
+BUILD_PLACEHOLDER = "__BUILD__"
 
 
 def leaflet_css(cache: Path) -> str:
@@ -43,6 +45,9 @@ def main() -> int:
         print("web/index.html has no Leaflet CSS placeholder.")
         return 1
     page = source.replace(PLACEHOLDER, leaflet_css(cfg.cache_dir / "leaflet-1.9.4.css"))
+    meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
+    stamp = str(meta.get("provenance", {}).get("run_at", ""))[:19].replace(":", "") or "dev"
+    page = page.replace(BUILD_PLACEHOLDER, stamp)
     (out / "index.html").write_text(page, encoding="utf-8")
     shutil.copyfile(
         PROJECT_ROOT / "data" / "reference" / "provinces.geojson", out / "provinces.geojson"
