@@ -62,7 +62,21 @@ function lineRow(l, counts, store, onFocusStation, onZoomLine) {
     onZoomLine(l);
   });
   row.appendChild(b);
-  if (!stops.length) return [row];
+  const play = document.createElement("button");
+  play.className = "play";
+  play.type = "button";
+  play.setAttribute("aria-label", `Play the ${l.code} route`);
+  play.title = "Play the route: reveal each stop's walkshed in order";
+  play.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>';
+  play.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    onZoomLine(l);
+  });
+  row.appendChild(play);
+  if (!stops.length) {
+    row.classList.add("noexp");
+    return [row];
+  }
   const exp = document.createElement("button");
   exp.className = "exp";
   exp.type = "button";
