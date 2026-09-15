@@ -285,7 +285,7 @@ h1 { font: 800 18px/1.15 var(--font-family); letter-spacing: -0.02em; margin: 0 
 .send-btn:disabled { background: color-mix(in srgb, var(--accent) 30%, var(--panel)); }
 .send-btn svg { width: 16px; height: 16px; }
 .actions { display: flex; gap: 8px; }
-a.send-btn { text-decoration: none; }
+a.send-btn { text-decoration: none; color: var(--on-accent); }
 .close-btn {
   position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border: 0; border-radius: 8px;
   background: var(--hover); color: var(--muted); cursor: pointer; display: grid; place-items: center;
