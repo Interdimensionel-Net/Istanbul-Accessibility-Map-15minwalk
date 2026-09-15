@@ -384,7 +384,7 @@ h1 {
 .sep { width: 1px; height: 26px; background: var(--line-strong); }
 
 /* Station sheet */
-#station {
+#station, #route {
   right: 16px;
   top: calc(16px + env(safe-area-inset-top, 0px));
   width: 336px;
@@ -395,10 +395,10 @@ h1 {
 }
 .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--focus); font-weight: 800; margin-bottom: 8px; }
 .eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--focus); box-shadow: 0 0 0 3px var(--focus-soft); }
-#station h2 { font: 800 28px/1.05 var(--font); letter-spacing: -0.03em; margin: 0 0 10px; padding-right: 32px; text-wrap: balance; }
-#station .codes { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
-#station .meta { color: var(--ink-2); font-size: 12.5px; font-weight: 500; margin-bottom: 16px; line-height: 1.5; }
-#station .meta .op { color: var(--ink-3); margin-top: 2px; }
+#station h2, #route h2 { font: 800 28px/1.05 var(--font); letter-spacing: -0.03em; margin: 0 0 10px; padding-right: 32px; text-wrap: balance; }
+#station .codes, #route .codes { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+#station .meta, #route .meta { color: var(--ink-2); font-size: 12.5px; font-weight: 500; margin-bottom: 16px; line-height: 1.5; }
+#station .meta .op, #route .meta .op { color: var(--ink-3); margin-top: 2px; }
 .hero { padding: 14px 16px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); margin-bottom: 12px; }
 .big { display: flex; align-items: baseline; gap: 6px; }
 .big span:first-child { font: 800 52px/0.95 var(--font); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
@@ -429,6 +429,20 @@ a.btn { text-decoration: none; }
 .close:hover { background: var(--surface-3); color: var(--ink); }
 .hint { font-size: 11.5px; color: var(--ink-3); margin: 12px 0 0; }
 #st-none { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
+
+.rt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }
+.rt-grid .cell { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.rt-grid .v { font: 800 20px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.rt-grid .l { font-size: 11px; font-weight: 600; color: var(--ink-3); margin-top: 3px; }
+.rt-bars { display: grid; grid-template-columns: minmax(0, 1fr) 3fr auto; gap: 4px 8px; align-items: center; font-size: 11.5px; max-height: 34vh; overflow-y: auto; margin-bottom: 12px; }
+.rt-bars .nm { color: var(--ink-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-bars .bar { height: 7px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.rt-bars .bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rt-color, var(--accent)); }
+.rt-bars .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-2); }
+.rt-bars .nm.none { opacity: 0.45; }
+@media (max-width: 640px) {
+  #route { top: auto; right: 0; left: 0; width: auto; max-width: none; z-index: 1100; bottom: 0; max-height: 70%; border-radius: 22px 22px 0 0; border-bottom: 0; padding: 16px 20px calc(18px + env(safe-area-inset-bottom, 0px)); }
+}
 
 /* Loading */
 #loading {
@@ -596,6 +610,30 @@ a.btn { text-decoration: none; }
     </a>
   </div>
   <p class="hint">Areas are street-network reach, not straight-line radius.</p>
+</aside>
+
+<aside id="route" class="float" hidden aria-labelledby="rt-name">
+  <button class="close" type="button" aria-label="Close route"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
+  <div class="eyebrow"><i aria-hidden="true"></i>Route</div>
+  <h2 id="rt-name">–</h2>
+  <div class="codes" id="rt-codes"></div>
+  <div class="meta" id="rt-meta"></div>
+  <div class="hero">
+    <div class="big"><span id="rt-big" class="num">0</span><span class="u">km²</span></div>
+    <div class="cap">within <b id="rt-min">15</b> min on foot of any stop, overlaps removed</div>
+  </div>
+  <div class="rt-grid">
+    <div class="cell"><div class="v num" id="rt-stops">–</div><div class="l">stops</div></div>
+    <div class="cell"><div class="v num" id="rt-len">–</div><div class="l">km of route</div></div>
+    <div class="cell"><div class="v num" id="rt-avg">–</div><div class="l">km² per stop, average</div></div>
+    <div class="cell"><div class="v num" id="rt-density">–</div><div class="l">stops per km</div></div>
+  </div>
+  <div class="rt-bars" id="rt-bars"></div>
+  <button class="btn" type="button" id="rt-replay">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+    Replay
+  </button>
+  <p class="hint">Double-click any line in the list to play its route.</p>
 </aside>
 
 <script>
@@ -769,6 +807,7 @@ a.btn { text-decoration: none; }
   const stationVisible = (s) => (s ? (state.focus ? String(s.sid) === state.focus : selected(s)) : false);
 
   function applyFilters() {
+    stopPlay();
     const ink = css("--ink");
     const shown = (f) => state.bands.has(f.properties.band) && stationVisible(stationsById.get(String(f.properties.sid)));
     edgeLayer.eachLayer((layer) => layer.setStyle({ ...edgeStyle(), opacity: shown(layer.feature) ? 1 : 0 }));
@@ -835,7 +874,7 @@ a.btn { text-decoration: none; }
           else state.lines.add(l.line);
           applyFilters();
         });
-        b.addEventListener("dblclick", () => { state.lines = new Set([l.line]); applyFilters(); zoomToLine(l); });
+        b.addEventListener("dblclick", () => openRoute(l));
         row.appendChild(b);
         if (stops.length) {
           const exp = document.createElement("button");
@@ -871,6 +910,84 @@ a.btn { text-decoration: none; }
     map.fitBounds(L.latLngBounds(l.coords.map(([x, y]) => [y, x])), fitOpts(17));
   }
 
+  /* Route panel: isolate the line, then reveal each stop's walkshed in order while the numbers count up */
+  let play = null;
+  const routeBox = $("#route");
+  function stopPlay() { if (play) { play.cancelled = true; play = null; } }
+  function openRoute(l) {
+    stopPlay();
+    clearFocus();
+    state.lines = new Set([l.line]);
+    applyFilters();
+    zoomToLine(l);
+    setPop(null);
+    const stops = Array.isArray(l.stations) ? l.stations : [];
+    const sids = stops.map((s) => (s.sid == null ? null : String(s.sid)));
+    const widest = Math.max(...BANDS);
+    const perStop = sids.map((sid) => (sid ? (km2ById.get(sid) || {})[widest] || 0 : 0));
+    const total = l.km2 != null ? l.km2 : perStop.reduce((a, b) => a + b, 0);
+    const matched = sids.filter(Boolean).length;
+    const len = l.length_km || 0;
+    $("#rt-name").textContent = l.name;
+    $("#rt-codes").innerHTML = chip(l.line);
+    $("#rt-meta").innerHTML = `<div>${esc(l.operator)}</div><div class="op">${esc(l.mode.replace(/_/g, " "))} · ${stops.length} official stops, ${matched} on the map</div>`;
+    $("#rt-min").textContent = widest / 60;
+    $("#rt-stops").textContent = fmt(stops.length);
+    $("#rt-len").textContent = len ? fmt(len, 1) : "–";
+    $("#rt-avg").textContent = matched ? fmt(total / matched, 2) : "–";
+    $("#rt-density").textContent = len ? fmt(stops.length / len, 2) : "–";
+    $("#rt-bars").style.setProperty("--rt-color", lineColor(l.line));
+    const max = Math.max(1, ...perStop);
+    $("#rt-bars").innerHTML = stops.map((s, i) =>
+      `<span class="nm${sids[i] ? "" : " none"}" title="${esc(s.name)}">${esc(s.name)}</span><span class="bar"><i data-i="${i}"></i></span><span class="v">${sids[i] ? fmt(perStop[i], 2) : "–"}</span>`
+    ).join("");
+    routeBox.hidden = false;
+    setSnap("peek");
+    playRoute(sids, perStop, total, max);
+  }
+  function playRoute(sids, perStop, total, max) {
+    stopPlay();
+    const token = { cancelled: false };
+    play = token;
+    const wanted = new Set(sids.filter(Boolean));
+    const layersOf = new Map();
+    [edgeLayer, bandLayer].forEach((group, gi) => group.eachLayer((layer) => {
+      const sid = String(layer.feature.properties.sid);
+      if (!wanted.has(sid)) return;
+      layer.setStyle(gi === 0 ? { ...edgeStyle(), opacity: 0 } : { ...bandStyle(layer.feature), fillOpacity: 0 });
+      layersOf.set(sid, [...(layersOf.get(sid) || []), [gi, layer]]);
+    }));
+    const stepMs = Math.max(60, Math.min(160, 2400 / Math.max(1, sids.length)));
+    const fadeMs = 380;
+    const big = $("#rt-big");
+    const bars = Array.from($("#rt-bars").querySelectorAll("i[data-i]"));
+    const start = performance.now();
+    const totalMs = stepMs * sids.length + fadeMs;
+    const sum = perStop.reduce((a, b) => a + b, 0) || 1;
+    function frame(now) {
+      if (token.cancelled) return;
+      const elapsed = now - start;
+      let done = 0;
+      sids.forEach((sid, i) => {
+        const k = Math.max(0, Math.min(1, (elapsed - i * stepMs) / fadeMs));
+        done += perStop[i] * k;
+        if (bars[i]) bars[i].style.width = `${((100 * perStop[i] * k) / max).toFixed(1)}%`;
+        (layersOf.get(sid) || []).forEach(([gi, layer]) => layer.setStyle(gi === 0 ? { opacity: k } : { fillOpacity: k }));
+      });
+      big.textContent = fmt(total * Math.min(1, done / sum), 1);
+      if (elapsed < totalMs) requestAnimationFrame(frame);
+      else { big.textContent = fmt(total, 1); play = null; }
+    }
+    requestAnimationFrame(frame);
+  }
+  function closeRoute() { stopPlay(); routeBox.hidden = true; applyFilters(); }
+  routeBox.querySelector(".close").addEventListener("click", closeRoute);
+  $("#rt-replay").addEventListener("click", () => {
+    const code = [...state.lines][0];
+    const l = meta && meta.lines.find((x) => x.line === code);
+    if (l && state.lines.size === 1) openRoute(l);
+  });
+
   function fitFocus(s) {
     const fs = bands.features.filter((f) => String(f.properties.sid) === String(s.sid));
     if (fs.length) map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: fs }).getBounds(), fitOpts(15));
@@ -880,6 +997,8 @@ a.btn { text-decoration: none; }
   function focusStation(sid) {
     const s = stationsById.get(String(sid));
     if (!s) return;
+    stopPlay();
+    routeBox.hidden = true;
     state.focus = String(s.sid);
     const k = km2ById.get(state.focus) || {};
     const present = BANDS.filter((b) => k[b] != null);
@@ -1056,6 +1175,7 @@ a.btn { text-decoration: none; }
     if (e.key === "/" && !typing) { e.preventDefault(); search.focus(); search.select(); }
     else if (e.key === "Escape" && !typing) {
       if (openPop()) setPop(null);
+      else if (!routeBox.hidden) closeRoute();
       else if (state.focus) closeStation();
     }
   });

@@ -12,6 +12,7 @@ import requests
 
 from walkshed.config import Config
 from walkshed.names import content_hash
+from walkshed.reference import load_extra_node_ids
 
 log = logging.getLogger(__name__)
 
@@ -25,11 +26,19 @@ def _area_clause(cfg: Config) -> str:
     return f"({parts})->.a;"
 
 
+def _extra_ids_clause(cfg: Config) -> str:
+    ids = load_extra_node_ids(cfg.reference_path.with_name("aliases.json"))
+    if not ids:
+        return ""
+    joined = ",".join(str(i) for i in ids)
+    return f"  node(id:{joined});\n"
+
+
 def build_query(cfg: Config) -> str:
     return f"""[out:json][timeout:120];
 {_area_clause(cfg)}
 (
-  node(area.a)["railway"="station"];
+{_extra_ids_clause(cfg)}  node(area.a)["railway"="station"];
   node(area.a)["railway"="tram_stop"];
   node(area.a)["railway"="subway_entrance"];
   node(area.a)["railway"="train_station_entrance"];

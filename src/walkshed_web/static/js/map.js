@@ -144,6 +144,26 @@ export function createMap(container, theme) {
     map.fitBounds(L.latLngBounds(line.coords.map(([x, y]) => [y, x])), fitOpts(17, phone));
   }
 
+  /* Hide the walksheds of the given stations and return a setter per station for the reveal. */
+  function routeLayers(sids) {
+    const wanted = new Set(sids.map(String));
+    const setters = new Map();
+    [layers.edge, layers.band].forEach((group, gi) => {
+      if (!group) return;
+      group.eachLayer((layer) => {
+        const sid = String(layer.feature.properties.sid);
+        if (!wanted.has(sid)) return;
+        layer.setStyle(gi === 0 ? { ...edgeStyle(), opacity: 0 } : { ...bandStyle(), fillOpacity: 0 });
+        const prev = setters.get(sid) || (() => {});
+        setters.set(sid, (k) => {
+          prev(k);
+          layer.setStyle(gi === 0 ? { opacity: k } : { fillOpacity: k });
+        });
+      });
+    });
+    return setters;
+  }
+
   function setTheme(nextTheme, state) {
     tokens = mapTokens(nextTheme.colors);
     applyBase();
@@ -170,6 +190,7 @@ export function createMap(container, theme) {
     applyFilters,
     fitStation,
     fitLine,
+    routeLayers,
     setTheme,
     setBase,
     basePick: () => basePick,

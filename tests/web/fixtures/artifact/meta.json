@@ -7,6 +7,7 @@
   "lines": [
     {"line": "M2", "name": "Yenikapı – Hacıosman", "mode": "subway", "operator": "Metro İstanbul",
      "coords": [[28.9516, 41.0052], [28.9877, 41.0632]],
+     "km2": 2.1, "length_km": 7.4,
      "stations": [{"name": "Yenikapı", "sid": 102}, {"name": "Şişli-Mecidiyeköy", "sid": 103}, {"name": "Ghost", "sid": null}]},
     {"line": "F2", "name": "Karaköy – Beyoğlu", "mode": "heritage_funicular", "operator": "İETT",
      "coords": [[28.974, 41.0229], [28.975, 41.026]],

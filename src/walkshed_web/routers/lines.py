@@ -21,6 +21,8 @@ def _line_out(line: LineDoc, indexes: Indexes, has_geometry: bool, query: LineQu
         stop_count=len(line.stations),
         station_count=len(indexes.stations_by_code.get(line.line, ())),
         has_route_geometry=has_geometry,
+        km2=line.km2,
+        length_km=line.length_km,
         stops=tuple(LineStopOut(name=s.name, sid=s.sid) for s in line.stations)
         if query.include_stops
         else None,

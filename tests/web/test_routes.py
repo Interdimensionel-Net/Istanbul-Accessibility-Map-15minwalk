@@ -48,6 +48,9 @@ def test_lines_list_and_detail(client: TestClient):
     m2 = next(line for line in body["data"] if line["code"] == "M2")
     assert m2["stop_count"] == 3 and m2["station_count"] == 2
     assert m2["stops"] is None and m2["coords"] is None
+    assert m2["km2"] == 2.1 and m2["length_km"] == 7.4
+    f2 = next(line for line in body["data"] if line["code"] == "F2")
+    assert f2["km2"] is None and f2["length_km"] is None
     body = client.get("/api/lines", params={"operator": "İETT", "include_stops": "true"}).json()
     assert [line["code"] for line in body["data"]] == ["F2"]
     assert body["data"][0]["stops"][0]["name"] == "Karaköy"

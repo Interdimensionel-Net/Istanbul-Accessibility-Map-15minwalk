@@ -18,5 +18,14 @@
   },
   "osm_id_to_reference": {
     "7726686093": "Göztepe Mahallesi"
+  },
+  "extra_osm_node_ids": {
+    "1867833765": "Şükrübey",
+    "11521482709": "Şükrübey",
+    "11521523673": "Şükrübey",
+    "1867722228": "İBB Sosyal Tesisleri",
+    "11521482721": "İBB Sosyal Tesisleri",
+    "11521482766": "İBB Sosyal Tesisleri",
+    "1867400943": "Cennet Mahallesi"
   }
 }

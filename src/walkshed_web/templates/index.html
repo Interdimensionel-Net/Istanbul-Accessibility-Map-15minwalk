@@ -115,6 +115,30 @@
   <p class="hint">Areas are street-network reach, not straight-line radius.</p>
 </aside>
 
+<aside id="route" class="float" hidden aria-labelledby="rt-name">
+  <button class="close-btn" type="button" aria-label="Close route"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
+  <div class="eyebrow"><i aria-hidden="true"></i>Route</div>
+  <h2 id="rt-name">–</h2>
+  <div class="codes" id="rt-codes"></div>
+  <div class="meta" id="rt-meta"></div>
+  <div class="hero">
+    <div class="big"><span id="rt-big" class="num">0</span><span class="u">km²</span></div>
+    <div class="cap">within <b id="rt-min">15</b> min on foot of any stop, overlaps removed</div>
+  </div>
+  <div class="rt-grid">
+    <div class="cell"><div class="v num" id="rt-stops">–</div><div class="l">stops</div></div>
+    <div class="cell"><div class="v num" id="rt-len">–</div><div class="l">km of route</div></div>
+    <div class="cell"><div class="v num" id="rt-avg">–</div><div class="l">km² per stop, average</div></div>
+    <div class="cell"><div class="v num" id="rt-density">–</div><div class="l">stops per km</div></div>
+  </div>
+  <div class="rt-bars" id="rt-bars"></div>
+  <button class="send-btn" type="button" id="rt-replay">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+    Replay
+  </button>
+  <p class="hint">Double-click any line in the list to play its route.</p>
+</aside>
+
 <div id="about-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="about-t">
   <div class="modal-content">
     <div class="modal-header">

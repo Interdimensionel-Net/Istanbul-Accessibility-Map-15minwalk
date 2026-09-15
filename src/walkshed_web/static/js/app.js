@@ -5,6 +5,7 @@ import { createDetail } from "./detail.js";
 import { renderLines, renderOperators, syncControls } from "./filters.js";
 import { $, $$, fmt, isPhone, phoneMq } from "./format.js";
 import { BASEMAPS, createMap } from "./map.js";
+import { createRoute } from "./route.js";
 import { createSearch } from "./search.js";
 import { createStore, initialState } from "./state.js";
 import { THEMES, applyColors, currentTheme, setTheme } from "./theme.js";
@@ -104,6 +105,7 @@ const detail = createDetail({
 async function focusStation(sid) {
   const s = await detail.open(sid);
   if (!s) return;
+  if (route.isOpen()) closeRoute();
   store.dispatch({ type: "focus", sid: s.sid });
   if (!detailRelease) detailRelease = esc.push(closeStation);
   setSnap("peek");
@@ -117,6 +119,33 @@ function closeStation() {
 }
 view.on("onStation", focusStation);
 view.on("onTileError", () => showToast("Map tiles are blocked here. The built-in sheet is shown instead.", 4000));
+
+/* Route panel */
+let routeRelease = null;
+const route = createRoute({
+  view,
+  model,
+  onClose: () => {
+    if (routeRelease) routeRelease();
+    routeRelease = null;
+    if (store) view.applyFilters(store.get());
+  },
+});
+function openRoute(line) {
+  if (detail.isOpen()) closeStation();
+  store.dispatch({ type: "isolateLine", code: line.code });
+  view.fitLine(line, isPhone());
+  setPop(null);
+  setSnap("peek");
+  route.open(line);
+  if (!routeRelease) routeRelease = esc.push(closeRoute);
+}
+function closeRoute() {
+  route.close();
+  if (routeRelease) routeRelease();
+  routeRelease = null;
+  if (store) view.applyFilters(store.get());
+}
 
 /* Search */
 const search = createSearch({ onPick: focusStation, onFocus: () => setPop(null) });
@@ -200,12 +229,13 @@ async function boot() {
 
   view.build({ land, basemap: meta.basemap, bandsGeo, routes, lines: model.lines, stations });
   renderOperators(model.operators, store);
-  renderLines(model, store, { onFocusStation: focusStation, onZoomLine: (l) => view.fitLine(l, isPhone()) });
+  renderLines(model, store, { onFocusStation: focusStation, onZoomLine: openRoute });
   renderBasemaps();
   renderThemes();
   $$("#lines .linerow").forEach(retrofit);
 
   store.subscribe((state) => {
+    route.cancel();
     view.applyFilters(state);
     syncControls(state, model);
   });

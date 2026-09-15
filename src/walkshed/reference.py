@@ -34,11 +34,22 @@ def load_aliases(path: Path) -> dict[str, str]:
 
 
 def load_id_overrides(path: Path) -> dict[int, str]:
-    """OSM node id -> reference name, for stations whose OSM name is shared by another station."""
+    """OSM node id -> reference name: stations whose OSM name is shared by another station, plus
+    the extra nodes the Overpass query fetches by id (see load_extra_node_ids)."""
     if not path.exists():
         return {}
-    raw = json.loads(path.read_text(encoding="utf-8")).get("osm_id_to_reference", {})
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    raw = {**doc.get("extra_osm_node_ids", {}), **doc.get("osm_id_to_reference", {})}
     return {int(k): v for k, v in raw.items()}
+
+
+def load_extra_node_ids(path: Path) -> tuple[int, ...]:
+    """OSM node ids the station query must fetch explicitly because their tags miss the
+    generic filters, for example Metrobüs platforms tagged network=İETT."""
+    if not path.exists():
+        return ()
+    raw = json.loads(path.read_text(encoding="utf-8")).get("extra_osm_node_ids", {})
+    return tuple(sorted(int(k) for k in raw))
 
 
 def apply_id_overrides(stations: gpd.GeoDataFrame, overrides: dict[int, str]) -> gpd.GeoDataFrame:

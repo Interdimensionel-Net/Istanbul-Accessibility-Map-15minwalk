@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 
 import geopandas as gpd
-from shapely.geometry import mapping
+from shapely.geometry import LineString, mapping
 
 from walkshed.config import Config
 from walkshed.names import MIN_LOOSE_KEY, line_stations, load_lines, normalize
@@ -163,6 +163,34 @@ def resolve_lines(
     )
 
 
+def _route_length_km(code: str, routes_path: Path, cfg: Config) -> float | None:
+    """Length of the OSM route relation geometry for a line, or None when it is missing."""
+    if not routes_path.exists():
+        return None
+    routes = gpd.read_file(routes_path)
+    match = routes[routes["line"] == code]
+    if match.empty:
+        return None
+    return round(float(match.to_crs(cfg.crs_metric).geometry.length.sum()) / 1000, 1)
+
+
+def line_stats(path: dict, bands_m: gpd.GeoDataFrame, routes_path: Path, cfg: Config) -> dict:
+    """Dissolved 15-minute area, route length and matched station count for one line."""
+    sids = [s["sid"] for s in path["stations"] if s["sid"] is not None]
+    widest = bands_m[bands_m["band_s"] == bands_m["band_s"].max()]
+    own = widest[widest["station_id"].isin(sids)]
+    km2 = float(own.geometry.union_all().area) / M2_PER_KM2 if len(own) else 0.0
+    coords = gpd.GeoSeries(
+        [LineString(path["coords"])] if len(path["coords"]) > 1 else [], crs=cfg.crs_geo
+    )
+    path_length = round(float(coords.to_crs(cfg.crs_metric).length.sum()) / 1000, 1)
+    relation_length = _route_length_km(path["line"], routes_path, cfg)
+    # A relation that carries both carriageways (Metrobüs) is about twice the station path.
+    both_ways = relation_length is not None and relation_length > path_length * 1.5
+    length = path_length if relation_length is None or both_ways else relation_length
+    return {"km2": round(km2, 2), "length_km": length, "station_count": len(set(sids))}
+
+
 def write_artifact_data(
     stations: gpd.GeoDataFrame,
     isochrones_m: gpd.GeoDataFrame,
@@ -229,11 +257,12 @@ def write_artifact_data(
     except Exception as error:  # noqa: BLE001 - the web map falls back to station paths
         route_count = 0
         log.warning("Route geometry unavailable (%s); station paths will be used.", error)
+    paths = line_paths(stations, lines, load_aliases(cfg.reference_path.with_name("aliases.json")))
     meta = {
         "stations": station_rows,
-        "lines": line_paths(
-            stations, lines, load_aliases(cfg.reference_path.with_name("aliases.json"))
-        ),
+        "lines": [
+            {**path, **line_stats(path, bands_m, out_dir / "routes.geojson", cfg)} for path in paths
+        ],
         "routes": route_count,
         "bands": sorted(int(b) for b in bands_m["band_s"].unique()),
         "walk_speed_kmh": cfg.walk_speed_kmh,

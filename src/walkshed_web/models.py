@@ -40,6 +40,8 @@ class LineDoc(BaseModel):
     operator: str
     coords: tuple[tuple[float, float], ...] = ()
     stations: tuple[LineStopDoc, ...] = ()
+    km2: float | None = None
+    length_km: float | None = None
 
 
 class ProvenanceDoc(BaseModel):
@@ -116,6 +118,8 @@ class LineOut(BaseModel):
     stop_count: int
     station_count: int
     has_route_geometry: bool
+    km2: float | None = None
+    length_km: float | None = None
     stops: tuple[LineStopOut, ...] | None = None
     coords: tuple[tuple[float, float], ...] | None = None
 

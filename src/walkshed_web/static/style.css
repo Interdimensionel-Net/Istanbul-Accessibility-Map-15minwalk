@@ -232,17 +232,17 @@ h1 { font: 800 18px/1.15 var(--font-family); letter-spacing: -0.02em; margin: 0 
 .sep { width: 1px; height: 26px; background: var(--border); }
 
 /* Station sheet */
-#station {
+#station, #route {
   right: 16px; top: calc(16px + env(safe-area-inset-top, 0px)); width: 336px; max-width: calc(100vw - 32px);
   max-height: calc(100% - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto; padding: 18px 20px; border-left: 3px solid var(--accent);
 }
 .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 8px; }
 .eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-#station h2 { font: 800 28px/1.05 var(--font-family); letter-spacing: -0.03em; margin: 0 0 10px; padding-right: 32px; text-wrap: balance; }
-#station .codes { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
-#station .meta { color: var(--muted); font-size: 12.5px; font-weight: 500; margin-bottom: 16px; line-height: 1.5; }
-#station .meta .op { color: var(--faint); margin-top: 2px; }
+#station h2, #route h2 { font: 800 28px/1.05 var(--font-family); letter-spacing: -0.03em; margin: 0 0 10px; padding-right: 32px; text-wrap: balance; }
+#station .codes, #route .codes { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+#station .meta, #route .meta { color: var(--muted); font-size: 12.5px; font-weight: 500; margin-bottom: 16px; line-height: 1.5; }
+#station .meta .op, #route .meta .op { color: var(--faint); margin-top: 2px; }
 .hero { padding: 14px 16px; border-radius: 12px; background: var(--hover); border: 1px solid var(--border); margin-bottom: 12px; }
 .big { display: flex; align-items: baseline; gap: 6px; }
 .big span:first-child { font: 800 52px/0.95 var(--font-family); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
@@ -256,6 +256,17 @@ h1 { font: 800 18px/1.15 var(--font-family); letter-spacing: -0.02em; margin: 0 
 .bars .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .hint { font-size: 11.5px; color: var(--faint); margin: 12px 0 0; }
 #st-none { font-size: 13px; color: var(--muted); margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: var(--hover); }
+
+.rt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }
+.rt-grid .cell { padding: 10px 12px; border-radius: 10px; background: var(--hover); border: 1px solid var(--border); }
+.rt-grid .v { font: 800 20px/1 var(--font-family); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.rt-grid .l { font-size: 11px; font-weight: 600; color: var(--faint); margin-top: 3px; }
+.rt-bars { display: grid; grid-template-columns: minmax(0, 1fr) 3fr auto; gap: 4px 8px; align-items: center; font-size: 11.5px; max-height: 34vh; overflow-y: auto; margin-bottom: 12px; }
+.rt-bars .nm { color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-bars .bar { height: 7px; border-radius: 4px; background: var(--hover-strong); overflow: hidden; }
+.rt-bars .bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rt-color, var(--accent)); }
+.rt-bars .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+.rt-bars .nm.none { opacity: 0.45; }
 
 /* Accent button, from the guide (§10.9) */
 .send-btn {
@@ -332,7 +343,7 @@ a.send-btn { text-decoration: none; }
   .mark svg { width: 19px; height: 19px; }
   h1 { font-size: 16px; }
   .sub { font-size: 12px; }
-  #station { top: auto; right: 0; left: 0; width: auto; max-width: none; z-index: 1100; bottom: 0; max-height: 64%; border-radius: 22px 22px 0 0; border-bottom: 0; border-left: 0; border-top: 3px solid var(--accent); padding: 16px 20px calc(18px + env(safe-area-inset-bottom, 0px)); }
+  #station, #route { top: auto; right: 0; left: 0; width: auto; max-width: none; z-index: 1100; bottom: 0; max-height: 64%; border-radius: 22px 22px 0 0; border-bottom: 0; border-left: 0; border-top: 3px solid var(--accent); padding: 16px 20px calc(18px + env(safe-area-inset-bottom, 0px)); }
   .leaflet-control-zoom { display: none; }
   #theme-grid { grid-template-columns: 1fr; }
 }
