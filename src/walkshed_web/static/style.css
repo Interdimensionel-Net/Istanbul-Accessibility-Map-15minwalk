@@ -257,11 +257,13 @@ h1 { font: 800 18px/1.15 var(--font-family); letter-spacing: -0.02em; margin: 0 
 .hint { font-size: 11.5px; color: var(--faint); margin: 12px 0 0; }
 #st-none { font-size: 13px; color: var(--muted); margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: var(--hover); }
 
+#route { width: 440px; }
+#route h2 { font-size: 24px; }
 .rt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }
 .rt-grid .cell { padding: 10px 12px; border-radius: 10px; background: var(--hover); border: 1px solid var(--border); }
 .rt-grid .v { font: 800 20px/1 var(--font-family); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .rt-grid .l { font-size: 11px; font-weight: 600; color: var(--faint); margin-top: 3px; }
-.rt-bars { display: grid; grid-template-columns: minmax(0, 1fr) 3fr auto; gap: 4px 8px; align-items: center; font-size: 11.5px; max-height: 34vh; overflow-y: auto; margin-bottom: 12px; }
+.rt-bars { display: grid; grid-template-columns: minmax(0, 1.5fr) 2fr auto; gap: 4px 8px; align-items: center; font-size: 11.5px; max-height: 34vh; overflow-y: auto; margin-bottom: 12px; }
 .rt-bars .nm { color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rt-bars .bar { height: 7px; border-radius: 4px; background: var(--hover-strong); overflow: hidden; }
 .rt-bars .bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rt-color, var(--accent)); }
