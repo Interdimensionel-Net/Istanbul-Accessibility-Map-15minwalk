@@ -176,3 +176,11 @@ Metro İstanbul network map (v.3 rev.20.1, July 2026) and Wikipedia line
 articles (CC BY-SA). Station names and line membership are factual data.
 Province outlines in `data/reference/provinces.geojson` come from OpenStreetMap
 via Nominatim (ODbL).
+
+Basemaps on the web map: OpenStreetMap tiles (ODbL, © OpenStreetMap contributors),
+OpenTopoMap (CC BY-SA), Esri World Imagery (Tiles © Esri — Source: Esri, Maxar,
+Earthstar Geographics, and the GIS User Community; free use with attribution), and
+Sentinel-2 cloudless by [EOX IT Services](https://s2maps.eu) (CC BY-NC-SA 4.0,
+contains modified Copernicus Sentinel data 2024; non-commercial use only). The map
+library is [Leaflet](https://leafletjs.com) 1.9.4 (BSD-2-Clause), vendored under
+`src/walkshed_web/static/vendor/leaflet/`.

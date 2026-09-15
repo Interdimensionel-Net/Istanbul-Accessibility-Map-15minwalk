@@ -21,7 +21,7 @@ def load_relations(path: Path) -> dict[str, list[int]]:
 
 
 def build_query(relations: dict[str, list[int]]) -> str:
-    ids = ",".join(str(i) for codes in relations.values() for i in codes)
+    ids = ",".join(str(int(i)) for codes in relations.values() for i in codes)
     return f"[out:json][timeout:120];relation(id:{ids});out geom;"
 
 

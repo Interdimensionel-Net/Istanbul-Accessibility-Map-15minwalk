@@ -19,6 +19,8 @@ from walkshed.config import DEFAULT_CONFIG, PROJECT_ROOT
 
 LEAFLET_CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
 PLACEHOLDER = "/* __LEAFLET_CSS__ */"
+JS_PLACEHOLDER = "/* __LEAFLET_JS__ */"
+VENDORED_JS = PROJECT_ROOT / "src" / "walkshed_web" / "static" / "vendor" / "leaflet" / "leaflet.js"
 BUILD_PLACEHOLDER = "__BUILD__"
 
 
@@ -45,6 +47,13 @@ def main() -> int:
         print("web/index.html has no Leaflet CSS placeholder.")
         return 1
     page = source.replace(PLACEHOLDER, leaflet_css(cfg.cache_dir / "leaflet-1.9.4.css"))
+    if JS_PLACEHOLDER not in page:
+        print("web/index.html has no Leaflet JS placeholder.")
+        return 1
+    # Inline the vendored, hash-checked Leaflet build: the page then loads no third-party script.
+    page = page.replace(
+        JS_PLACEHOLDER, VENDORED_JS.read_text(encoding="utf-8").replace("</script", "<\\/script")
+    )
     meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
     stamp = str(meta.get("provenance", {}).get("run_at", ""))[:19].replace(":", "") or "dev"
     page = page.replace(BUILD_PLACEHOLDER, stamp)
