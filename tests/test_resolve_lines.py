@@ -97,6 +97,38 @@ def test_duplicate_name_resolves_to_node_nearest_previous_stop():
     assert 30 not in set(out["osm_id"])
 
 
+def test_native_mode_beats_nearer_compatible_node():
+    """Küçükyalı: a Marmaray node sits nearer M4's previous stop than the M4 node. M4 must still
+    take its own subway node, and both nodes survive with their own line."""
+    lines = [
+        {
+            "line": "M4",
+            "mode": "subway",
+            "operator": "Metro İstanbul",
+            "status": "operating",
+            "stations": ["Maltepe", "Küçükyalı"],
+        },
+        {
+            "line": "B1",
+            "mode": "suburban_rail",
+            "operator": "TCDD Taşımacılık",
+            "status": "operating",
+            "stations": ["Küçükyalı", "Bostancı"],
+        },
+    ]
+    stations = _stations(
+        [
+            (1, "Maltepe", "subway", 29.09, 40.94),
+            (2, "Küçükyalı", "train", 29.107, 40.946),
+            (3, "Küçükyalı", "subway", 29.122, 40.949),
+            (4, "Bostancı", "train", 29.09, 40.95),
+        ]
+    )
+    out = resolve_lines(stations, lines).set_index("osm_id")
+    assert out.loc[3, "line"] == "M4"
+    assert out.loc[2, "line"] == "B1"
+
+
 def test_alias_maps_osm_spelling_to_reference_name():
     stations = _stations(
         [

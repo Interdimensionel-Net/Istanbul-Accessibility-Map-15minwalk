@@ -40,8 +40,8 @@ def main() -> int:
     widest = isochrones[isochrones["band_s"] == isochrones["band_s"].max()]
     coverage = dissolve_coverage(widest.to_crs(cfg.crs_metric)).to_crs(cfg.crs_geo)
     summary = summarize(widest.to_crs(cfg.crs_metric), coverage.to_crs(cfg.crs_metric))
-    stations.to_file(out / "stations.geojson", driver="GeoJSON")
-    isochrones.to_file(out / "isochrones.geojson", driver="GeoJSON")
+    # stations.geojson and isochrones.geojson are pipeline outputs and stay untouched here:
+    # a narrower label resolution must never delete computed walksheds from disk.
     coverage.to_file(out / "coverage.geojson", driver="GeoJSON")
     summary = {
         **summary,

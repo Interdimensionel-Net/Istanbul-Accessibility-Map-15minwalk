@@ -14,6 +14,19 @@ from walkshed.names import MIN_LOOSE_KEY, line_stations, load_lines, normalize
 from walkshed.reference import COMPATIBLE_MODES, load_aliases
 from walkshed.routes import write_routes
 
+# The OSM mode a line of each reference mode is normally tagged with. Tried before the wider
+# COMPATIBLE_MODES table, so a subway line prefers its own subway node over a Marmaray node
+# of the same name that happens to lie nearer the previous stop (Küçükyalı, Ayrılık Çeşmesi).
+NATIVE_OSM_MODES = {
+    "subway": {"subway"},
+    "suburban_rail": {"train"},
+    "tram": {"tram", "light_rail"},
+    "heritage_tram": {"tram"},
+    "brt": {"brt"},
+    "funicular": {"funicular", "light_rail"},
+    "heritage_funicular": {"funicular"},
+    "cable_car": {"cable_car"},
+}
 log = logging.getLogger(__name__)
 M2_PER_KM2 = 1_000_000
 
@@ -74,11 +87,12 @@ def _candidates(name: str, lookup: dict, official: set[str]) -> list[tuple[int, 
 def _pick(
     candidates: list[tuple[int, float, float, str]], line_mode: str, anchor: tuple | None
 ) -> tuple[int, float, float, str] | None:
-    """Prefer a mode-compatible node; among several, the one nearest the previous stop."""
+    """Native mode first, then any compatible mode; within a tier, nearest to the previous stop."""
     if not candidates:
         return None
+    native = [c for c in candidates if c[3] in NATIVE_OSM_MODES.get(line_mode, set())]
     fitting = [c for c in candidates if line_mode in COMPATIBLE_MODES.get(c[3], {line_mode})]
-    pool = fitting or candidates
+    pool = native or fitting or candidates
     if anchor is None or len(pool) == 1:
         return pool[0]
     return min(pool, key=lambda c: (c[1] - anchor[1]) ** 2 + (c[2] - anchor[2]) ** 2)
