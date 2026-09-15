@@ -1,11 +1,12 @@
 """HTTP surface: envelope, validation, errors, headers, rate limits, data files, page."""
 
-import gzip
 import json
 from pathlib import Path
 
+import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from walkshed_web.app import create_app
 from walkshed_web.settings import Settings
@@ -107,8 +108,10 @@ def test_station_detail_and_bands(client: TestClient):
 def test_search(client: TestClient):
     hits = client.get("/api/search", params={"q": "karakoy"}).json()["data"]
     assert hits[0]["name"] == "Karaköy" and hits[0]["lines"] == ["F2"]
-    hits = client.get("/api/search", params={"q": "İ"}).json()["data"]
-    assert hits and hits[0]["name"] == "Şişli-Mecidiyeköy"
+    hits = client.get("/api/search", params={"q": "ŞİŞ"}).json()["data"]
+    assert [h["name"] for h in hits] == ["Şişli-Mecidiyeköy"]
+    hits = client.get("/api/search", params={"q": "i"}).json()["data"]
+    assert [h["name"] for h in hits] == ["Yenikapı", "Şişli-Mecidiyeköy"]
     assert client.get("/api/search").status_code == 422
     assert client.get("/api/search", params={"q": "x" * 81}).status_code == 422
     assert client.get("/api/search", params={"q": "a\x01b"}).status_code == 422
@@ -121,11 +124,12 @@ def test_security_headers_everywhere(client: TestClient):
             assert h in r.headers, (path, h)
         assert "strict-transport-security" not in r.headers  # plain http
     r = client.get("/api/health", headers={"x-forwarded-proto": "https"})
-    assert r.headers["strict-transport-security"].startswith("max-age=31536000")
+    assert "strict-transport-security" not in r.headers  # header from an untrusted client
 
 
 def test_hsts_can_be_disabled(settings: Settings):
-    with TestClient(create_app(settings.model_copy(update={"enable_hsts": False}))) as tc:
+    cfg = settings.model_copy(update={"enable_hsts": False, "trust_forwarded_for": True})
+    with TestClient(create_app(cfg)) as tc:
         r = tc.get("/api/health", headers={"x-forwarded-proto": "https"})
     assert "strict-transport-security" not in r.headers
 
@@ -165,9 +169,48 @@ def test_rate_limit_returns_429_with_retry_after(settings: Settings):
         assert "content-security-policy" in r.headers
         # separate bucket families are independent
         assert tc.get("/api/search", params={"q": "k"}).status_code == 200
+        # without trust_forwarded_for the header does not open a fresh bucket
+        assert tc.get("/api/meta", headers={"x-forwarded-for": "10.0.0.9"}).status_code == 429
 
 
-def test_data_file_headers_and_gzip(client: TestClient, artifact_dir: Path):
+def test_rate_limit_keys_by_forwarded_for_when_trusted(settings: Settings):
+    cfg = settings.model_copy(
+        update={"rate_limit_per_minute": 60, "rate_limit_burst": 1, "trust_forwarded_for": True}
+    )
+    with TestClient(create_app(cfg)) as tc:
+        first = tc.get("/api/meta", headers={"x-forwarded-for": "10.0.0.1, 1.1.1.1"})
+        assert first.status_code == 200
+        assert tc.get("/api/meta", headers={"x-forwarded-for": "10.0.0.1"}).status_code == 429
+        assert tc.get("/api/meta", headers={"x-forwarded-for": "10.0.0.2"}).status_code == 200
+        assert tc.get("/api/meta", headers={"x-forwarded-for": " "}).status_code == 200
+
+
+def test_hsts_needs_trusted_proxy_for_forwarded_proto(settings: Settings):
+    with TestClient(create_app(settings.model_copy(update={"trust_forwarded_for": True}))) as tc:
+        r = tc.get("/api/health", headers={"x-forwarded-proto": "https"})
+    assert "strict-transport-security" in r.headers
+
+
+def test_static_rejects_windows_path_syntax(client: TestClient):
+    for path in (
+        "/static/style.css::$DATA",
+        "/static/style.css:stream",
+        "/static/style.css.",
+        "/static/a%5Cb.css",
+    ):
+        r = client.get(path)
+        assert r.status_code == 404, path
+    assert client.get("/static/index.html").status_code == 404
+
+
+def test_tile_hosts_are_validated(artifact_dir: Path):
+    with pytest.raises(ValidationError):
+        Settings(artifact_dir=artifact_dir, tile_hosts=("https://ok.example; script-src *",))
+    ok = Settings(artifact_dir=artifact_dir, tile_hosts=("https://*.tiles.example",))
+    assert ok.tile_hosts == ("https://*.tiles.example",)
+
+
+def test_data_file_headers_and_304(client: TestClient, artifact_dir: Path):
     r = client.get("/data/bands.geojson", headers={"accept-encoding": "identity"})
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("application/geo+json")
@@ -176,22 +219,33 @@ def test_data_file_headers_and_gzip(client: TestClient, artifact_dir: Path):
     assert "content-encoding" not in r.headers
     assert r.json() == json.loads((artifact_dir / "bands.geojson").read_text(encoding="utf-8"))
     etag = r.headers["etag"]
-    r304 = client.get("/data/bands.geojson", headers={"if-none-match": etag})
+    r304 = client.get(
+        "/data/bands.geojson", headers={"accept-encoding": "identity", "if-none-match": etag}
+    )
     assert r304.status_code == 304 and r304.content == b""
-    r304 = client.get("/data/bands.geojson", headers={"if-modified-since": r.headers["last-modified"]})
+    r304 = client.get(
+        "/data/bands.geojson",
+        headers={"accept-encoding": "identity", "if-modified-since": r.headers["last-modified"]},
+    )
     assert r304.status_code == 304
 
 
 def test_data_file_gzip_negotiation(settings: Settings, artifact_dir: Path):
     cfg = settings.model_copy(update={"gzip_min_bytes": 0})
+    raw_size = (artifact_dir / "bands.geojson").stat().st_size
     with TestClient(create_app(cfg)) as tc:
         r = tc.get("/data/bands.geojson", headers={"accept-encoding": "gzip"})
-    assert r.headers.get("content-encoding") == "gzip"
-    # The test client transparently decompresses; the raw stream must still be valid gzip.
-    raw = gzip.compress(r.content) if r.content[:2] != b"\x1f\x8b" else r.content
-    assert json.loads(gzip.decompress(raw)) == json.loads(
-        (artifact_dir / "bands.geojson").read_text(encoding="utf-8")
-    )
+        assert r.headers.get("content-encoding") == "gzip"
+        assert int(r.headers["content-length"]) < raw_size  # the wire body is compressed
+        assert r.headers["etag"].endswith('-gzip"')
+        assert r.json() == json.loads((artifact_dir / "bands.geojson").read_text(encoding="utf-8"))
+        weak = "W/" + r.headers["etag"]
+        r304 = tc.get(
+            "/data/bands.geojson", headers={"accept-encoding": "gzip", "if-none-match": weak}
+        )
+        assert r304.status_code == 304
+        plain = tc.get("/data/bands.geojson", headers={"accept-encoding": "identity"})
+        assert plain.headers["etag"] != r.headers["etag"]
 
 
 def test_data_versioned_cache_and_images(client: TestClient):
@@ -215,10 +269,11 @@ def test_data_rejects_traversal_and_unknown_names(client: TestClient):
         "BANDS.geojson",
         "meta.json",
         "basemap_wide.jpg",
+        "a.b.c",
     ):
         r = client.get(f"/data/{name}")
-        assert r.status_code == 404, name
-        assert r.json()["error"] in ("Not available.", "Not found.")
+        assert r.status_code in (404, 422), name
+        assert r.json()["success"] is False
     assert client.get("/data/").status_code == 404
 
 

@@ -1,6 +1,7 @@
 <meta charset="utf-8">
 <title>Fifteen Minutes to Rail</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%230b7285' stroke-width='3'/%3E%3Cpath d='M16 9v7l4 3' fill='none' stroke='%230b7285' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -96,6 +97,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -187,6 +189,7 @@ svg { display: block; }
   gap: 2px;
   padding: 5px;
   border-radius: 14px;
+  z-index: 1200;
 }
 .search { position: relative; flex: 1; display: flex; align-items: center; min-width: 0; }
 .search > svg { position: absolute; left: 12px; width: 17px; height: 17px; color: var(--ink-3); pointer-events: none; }
@@ -255,6 +258,7 @@ svg { display: block; }
 .sw-auto { background: linear-gradient(135deg, #f2f2f0 0 50%, #1c1c1c 50% 100%); }
 .sw-osm { background: linear-gradient(135deg, #ebe5d8, #b8d7ea); }
 .sw-positron { background: #f2f2f0; }
+.sw-satellite { background: radial-gradient(circle at 35% 35%, #6b8e4e, #2b4a6f 70%); }
 .sw-darkmatter { background: #1c1c1c; }
 .sw-voyager { background: linear-gradient(135deg, #fbf3e3, #cfe0ec); }
 .sw-topo { background: linear-gradient(135deg, #d9e6c8, #efe6d2); }
@@ -611,7 +615,9 @@ h1 {
   const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>';
   const CARTO_ATTR = OSM_ATTR + ' &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
   // Open tile layers. "filter" marks OpenStreetMap-styled layers that get the dark-theme CSS filter.
+  const ESRI_ATTR = 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
   const BASEMAPS = [
+    { id: "satellite", name: "Satellite", sub: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", maxZoom: 18, attr: ESRI_ATTR },
     { id: "osm", name: "OpenStreetMap", url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", maxZoom: 19, attr: OSM_ATTR, filter: true },
     { id: "positron", name: "Positron", sub: "CARTO, light", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", subdomains: "abcd", maxZoom: 20, attr: CARTO_ATTR },
     { id: "darkmatter", name: "Dark Matter", sub: "CARTO, dark", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", subdomains: "abcd", maxZoom: 20, attr: CARTO_ATTR },

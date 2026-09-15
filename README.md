@@ -5,6 +5,8 @@ station: metro, Marmaray, suburban rail, tram, funicular, cable car, and the
 Metrobüs BRT. Routing runs on the OpenStreetMap pedestrian network with osmnx.
 No API key is needed.
 
+**Live map:** https://interdimensionel-net.github.io/Istanbul-Accessibility-Map-15minwalk/ — no install, no key. Pick lines, search a station, switch between OpenStreetMap, satellite and terrain basemaps.
+
 Operators are kept apart: Metro İstanbul (İBB), TCDD Taşımacılık (Marmaray B1,
 B2, M11, T6), and İETT (Metrobüs, T2, F2).
 
@@ -122,6 +124,42 @@ fallback there.
 `scripts/render_map.py` rebuilds the Folium map in `output/` from saved results
 without recomputing isochrones. `scripts/validate_lines.py` reports which
 official stations have no OpenStreetMap match.
+
+## Web app
+
+`walkshed-web` serves the precomputed data in `output/artifact/` from a FastAPI
+backend with a vanilla JavaScript front end. It never recomputes isochrones.
+Run the pipeline first, then:
+
+```
+uv sync --extra web
+uv run walkshed-web
+```
+
+Open `http://127.0.0.1:8000`. The page follows the five-variable theme contract
+(`--bg`, `--fg`, `--panel`, `--border`, `--red`) with 16 presets; `midnight` is
+the default. Leaflet is vendored under `src/walkshed_web/static/vendor/`, so the
+Content-Security-Policy allows scripts from this origin only.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `WALKSHED_WEB_ARTIFACT_DIR` | `output/artifact` | Folder with `meta.json` and `bands.geojson`. |
+| `WALKSHED_WEB_HOST` | `127.0.0.1` | Bind address. |
+| `WALKSHED_WEB_PORT` | `8000` | Port. |
+| `WALKSHED_WEB_RATE_LIMIT_PER_MINUTE` | `120` | Base rate per client for `/api/*`. Other route families scale from it. |
+| `WALKSHED_WEB_RATE_LIMIT_BURST` | `30` | Bucket size. |
+| `WALKSHED_WEB_ENABLE_HSTS` | `true` | Send HSTS on HTTPS requests. |
+| `WALKSHED_WEB_TRUST_FORWARDED_FOR` | `false` | Trust `X-Forwarded-For` and `X-Forwarded-Proto` for rate limiting and HSTS. Enable only behind a proxy you control. |
+| `WALKSHED_WEB_ENABLE_DOCS` | `false` | Expose `/docs` and `/openapi.json`. |
+| `WALKSHED_WEB_EXPOSE_PROVENANCE` | `false` | Include package versions and config in `/api/meta`. |
+| `WALKSHED_WEB_TILE_HOSTS` | OSM, OpenTopoMap, Esri | JSON list of tile origins allowed in `img-src`. |
+| `WALKSHED_WEB_LOG_LEVEL` | `INFO` | Structured JSON logs. Query strings and client addresses are never logged. |
+
+Every `/api/*` response is `{success, data, error, meta}`. `/data/{name}` returns
+the raw GeoJSON and basemap files with `ETag`, gzip, and a one-year immutable
+cache when the URL carries `?v=<reference_hash>`. Every endpoint is rate limited
+and every query parameter is validated with Pydantic. The app holds no secrets
+and has no login; bind it to localhost or put it behind your own gateway.
 
 ## License and attribution
 

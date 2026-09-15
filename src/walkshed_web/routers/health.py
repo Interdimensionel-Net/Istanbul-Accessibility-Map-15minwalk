@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from walkshed_web import __version__
 from walkshed_web.artifact import Artifact, artifact_from_app
-<br>from walkshed_web.envelope import ok
+from walkshed_web.envelope import ok
 from walkshed_web.models import HealthOut, VersionOut
 
 router = APIRouter(prefix="/api", tags=["health"])

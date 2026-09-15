@@ -15,6 +15,7 @@ MODE_PATTERN = r"^[a-z_]{1,24}$"
 SidPath = Annotated[int, Path(ge=1, le=2**63 - 1)]
 CodePath = Annotated[str, Path(pattern=CODE_PATTERN)]
 VersionQuery = Annotated[str | None, Query(pattern=HASH_PATTERN)]
+FileNamePath = Annotated[str, Path(pattern=r"^[a-z0-9_]{1,40}\.[a-z]{2,8}$")]
 
 
 class StationQuery(BaseModel):

@@ -29,25 +29,50 @@ def csp_for(nonce: str, tile_hosts: Iterable[str]) -> str:
             "form-action 'none'",
             "frame-ancestors 'none'",
             "object-src 'none'",
+            "upgrade-insecure-requests",
         ]
     )
+
+
+STATIC_PREFIX = "/static/"
+
+
+def unsafe_static_path(path: str) -> bool:
+    """Reject path syntax that Windows treats specially before it reaches the filesystem:
+    alternate data streams (`file::$DATA`), backslashes, and trailing dots or spaces.
+    """
+    if not path.startswith(STATIC_PREFIX):
+        return False
+    tail = path[len(STATIC_PREFIX) :]
+    return any(c in tail for c in (":", "\\", "\x00")) or tail.endswith((".", " ")) or ".." in tail
 
 
 class SecurityHeadersMiddleware:
     """Pure ASGI middleware so the headers also land on 404s, 429s, and static files."""
 
-    def __init__(self, app: ASGIApp, tile_hosts: Iterable[str], enable_hsts: bool) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        tile_hosts: Iterable[str],
+        enable_hsts: bool,
+        trust_forwarded_for: bool = False,
+    ) -> None:
         self.app = app
         self.tile_hosts = tuple(tile_hosts)
         self.enable_hsts = enable_hsts
+        self.trust_forwarded_for = trust_forwarded_for
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
+        if unsafe_static_path(scope.get("path", "")):
+            scope = {**scope, "path": "/static/", "raw_path": b"/static/"}
         nonce = secrets.token_urlsafe(16)
         scope.setdefault("state", {})[NONCE_KEY] = nonce
-        secure = scope.get("scheme") == "https" or _forwarded_https(scope)
+        secure = scope.get("scheme") == "https" or (
+            self.trust_forwarded_for and _forwarded_https(scope)
+        )
 
         async def send_with_headers(message: Message) -> None:
             if message["type"] == "http.response.start":

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import time
 import uuid
 from typing import Any
@@ -31,11 +32,25 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(line, ensure_ascii=False)
 
 
+class StderrHandler(logging.StreamHandler):
+    """Writes to whatever sys.stderr is at emit time, so a replaced stream is never stale."""
+
+    @property
+    def stream(self):  # type: ignore[override]
+        return sys.stderr
+
+    @stream.setter
+    def stream(self, value) -> None:
+        pass
+
+
 def configure_logging(level: str) -> None:
-    handler = logging.StreamHandler()
-    handler.setFormatter(JsonFormatter())
+    """Install one JSON handler on the root logger. Safe to call more than once."""
     root = logging.getLogger()
-    root.handlers = [handler]
+    if not any(isinstance(h.formatter, JsonFormatter) for h in root.handlers):
+        handler = StderrHandler()
+        handler.setFormatter(JsonFormatter())
+        root.handlers = [handler]
     root.setLevel(level)
     for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
         logging.getLogger(name).handlers = []
@@ -49,8 +64,9 @@ class RequestLogMiddleware:
     The query string is never logged, so search terms never land in the log.
     """
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, trust_forwarded_for: bool = False) -> None:
         self.app = app
+        self.trust_forwarded_for = trust_forwarded_for
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -78,7 +94,7 @@ class RequestLogMiddleware:
                         "path": scope.get("path"),
                         "status": status["code"],
                         "duration_ms": round((time.perf_counter() - started) * 1000, 1),
-                        "client_hash": client_hash(scope),
+                        "client_hash": client_hash(scope, self.trust_forwarded_for),
                     }
                 },
             )

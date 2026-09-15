@@ -16,7 +16,7 @@ from walkshed_web.artifact import load_artifact
 from walkshed_web.errors import install_handlers
 from walkshed_web.indexes import build_indexes
 from walkshed_web.limiter import Bucket, RateLimiter, RateLimitMiddleware
-from walkshed_web.logging_config import RequestLogMiddleware
+from walkshed_web.logging_config import RequestLogMiddleware, configure_logging
 from walkshed_web.routers import ALL_ROUTERS
 from walkshed_web.security import SecurityHeadersMiddleware
 from walkshed_web.settings import Settings, get_settings
@@ -43,6 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        configure_logging(cfg.log_level)
         artifact = load_artifact(cfg.artifact_dir, cfg.gzip_min_bytes)
         app.state.artifact = artifact
         app.state.indexes = build_indexes(artifact.meta)
@@ -65,15 +66,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     # Starlette wraps in reverse order: the last added middleware is the outermost.
-    app.add_middleware(GZipMiddleware, minimum_size=1024)
+    app.add_middleware(GZipMiddleware, minimum_size=max(cfg.gzip_min_bytes, 1))
     app.add_middleware(
         RateLimitMiddleware,
         limiter=app.state.limiter,
         buckets=rate_buckets(cfg),
         default=Bucket("page", max(1, cfg.rate_limit_per_minute // 2), cfg.rate_limit_burst),
+        trust_forwarded_for=cfg.trust_forwarded_for,
     )
-    app.add_middleware(RequestLogMiddleware)
+    app.add_middleware(RequestLogMiddleware, trust_forwarded_for=cfg.trust_forwarded_for)
     app.add_middleware(
-        SecurityHeadersMiddleware, tile_hosts=cfg.tile_hosts, enable_hsts=cfg.enable_hsts
+        SecurityHeadersMiddleware,
+        tile_hosts=cfg.tile_hosts,
+        enable_hsts=cfg.enable_hsts,
+        trust_forwarded_for=cfg.trust_forwarded_for,
     )
     return app

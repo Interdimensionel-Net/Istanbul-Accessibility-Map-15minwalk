@@ -28,20 +28,14 @@ def _line_out(line: LineDoc, indexes: Indexes, has_geometry: bool, query: LineQu
     )
 
 
-def _check_filters(query: LineQuery, indexes: Indexes) -> None:
-    if query.operator is not None and query.operator not in indexes.operators:
-        raise ApiError(422)
-    if query.mode is not None and query.mode not in indexes.modes:
-        raise ApiError(422)
-
-
 @router.get("")
 def list_lines(
     query: Annotated[LineQuery, Query()],
     artifact: Annotated[Artifact, Depends(artifact_from_app)],
     indexes: Annotated[Indexes, Depends(indexes_from_app)],
 ) -> dict:
-    _check_filters(query, indexes)
+    if not indexes.filters_are_known(query.operator, query.mode):
+        raise ApiError(422)
     has_geometry = artifact.route_count > 0
     lines = [
         _line_out(line, indexes, has_geometry, query)

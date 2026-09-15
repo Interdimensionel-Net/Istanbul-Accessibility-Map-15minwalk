@@ -17,9 +17,7 @@ def normalize_tr(text: str) -> str:
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).strip()
 
 
-def rank_stations(
-    stations: Iterable[StationDoc], query: str, limit: int
-) -> tuple[StationDoc, ...]:
+def rank_stations(stations: Iterable[StationDoc], query: str, limit: int) -> tuple[StationDoc, ...]:
     """Prefix matches first, then substring matches, in input order. Empty query -> nothing."""
     key = normalize_tr(query)
     if not key:

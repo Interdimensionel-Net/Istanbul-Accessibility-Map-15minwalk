@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from walkshed_web.security import NONCE_KEY
 
 router = APIRouter(tags=["pages"])
-INDEX_PATH = Path(__file__).resolve().parents[1] / "static" / "index.html"
+INDEX_PATH = Path(__file__).resolve().parents[1] / "templates" / "index.html"
 NONCE_PLACEHOLDER = "{{CSP_NONCE}}"
 
 

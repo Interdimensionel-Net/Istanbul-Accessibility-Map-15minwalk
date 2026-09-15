@@ -59,10 +59,21 @@ class RateLimiter:
             self._state.popitem(last=False)
 
 
-def client_hash(scope: Scope) -> str:
-    """Stable, salted, non-reversible id for the client address. Never log the raw address."""
+def client_address(scope: Scope, trust_forwarded_for: bool = False) -> str:
+    """The peer address, or the first X-Forwarded-For hop when a trusted proxy sits in front."""
+    if trust_forwarded_for:
+        for name, value in scope.get("headers", []):
+            if name == b"x-forwarded-for":
+                first = value.decode("latin-1").split(",")[0].strip()
+                if first:
+                    return first
     client = scope.get("client")
-    host = client[0] if client else "unknown"
+    return client[0] if client else "unknown"
+
+
+def client_hash(scope: Scope, trust_forwarded_for: bool = False) -> str:
+    """Stable, salted, non-reversible id for the client address. Never log the raw address."""
+    host = client_address(scope, trust_forwarded_for)
     return hashlib.sha256(_SALT + host.encode("utf-8")).hexdigest()[:12]
 
 
@@ -82,18 +93,21 @@ class RateLimitMiddleware:
         limiter: RateLimiter,
         buckets: tuple[tuple[str, Bucket], ...],
         default: Bucket,
+        trust_forwarded_for: bool = False,
     ) -> None:
         self.app = app
         self.limiter = limiter
         self.buckets = buckets
         self.default = default
+        self.trust_forwarded_for = trust_forwarded_for
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
         bucket = bucket_for(scope["path"], self.buckets, self.default)
-        decision = self.limiter.check(f"{bucket.name}:{client_hash(scope)}", bucket)
+        key = f"{bucket.name}:{client_hash(scope, self.trust_forwarded_for)}"
+        decision = self.limiter.check(key, bucket)
         if decision.allowed:
             await self.app(scope, receive, send)
             return

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<title>Fifteen Minutes to Rail</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Walking reach within 15 minutes of every rapid transit station in Istanbul.">
+<meta name="theme-color" content="#0d1117">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%23f85149' stroke-width='3'/%3E%3Cpath d='M16 9v7l4 3' fill='none' stroke='%23f85149' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/static/style.css">
+<script nonce="{{CSP_NONCE}}">
+  /* First paint: apply the saved theme before modules load, so there is no flash. */
+  (function () {
+    try {
+      var saved = JSON.parse(localStorage.getItem("walkshed-theme") || "null");
+      var c = saved && saved.colors;
+      if (!c) return;
+      var s = document.documentElement.style;
+      var hex = /^#[0-9a-f]{6}$/i;
+      ["bg", "fg", "panel", "border", "red"].forEach(function (k) { if (hex.test(c[k] || "")) s.setProperty("--" + k, c[k]); });
+      if (saved.name) document.documentElement.dataset.theme = saved.name;
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m && c.bg) m.content = c.bg;
+    } catch (e) { /* storage unavailable */ }
+  })();
+</script>
+</head>
+<body>
+
+<div id="map" role="application" aria-label="Map of Istanbul with walking catchments around rail stations"></div>
+
+<div id="loading" aria-live="polite">
+  <div class="t">Fifteen Minutes to Rail</div>
+  <div class="p"><i></i></div>
+  <div class="s">Loading the walking network…</div>
+</div>
+
+<div id="bar" class="float">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="search" id="search" placeholder="Find a station" autocomplete="off" aria-label="Find a station" role="combobox" aria-expanded="false" aria-controls="hits" aria-autocomplete="list" maxlength="80">
+    <kbd aria-hidden="true">/</kbd>
+  </div>
+  <button class="icon-rail-btn" id="base-btn" type="button" aria-label="Choose a basemap" aria-expanded="false" aria-controls="basemap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+  </button>
+  <button class="icon-rail-btn" id="theme-btn" type="button" aria-label="Choose a theme" aria-expanded="false" aria-controls="themes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20 5 5 0 0 0 5-5 3 3 0 0 0-3-3h-2a3 3 0 0 1-3-3 5 5 0 0 1 5-5"/></svg>
+  </button>
+  <button class="icon-rail-btn" id="about-btn" type="button" aria-label="About this map" aria-expanded="false" aria-controls="about-modal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+  </button>
+  <ul id="hits" class="pop" role="listbox" aria-label="Matching stations" hidden></ul>
+  <div id="basemap" class="pop" role="dialog" aria-labelledby="base-t" hidden>
+    <div class="pop-h"><h3 id="base-t">Basemap</h3></div>
+    <div id="base-list" role="radiogroup" aria-label="Basemap"></div>
+    <p class="note">Live tiles may be blocked on some hosts. The built-in sheet is then shown.</p>
+  </div>
+  <div id="themes" class="pop" role="dialog" aria-labelledby="themes-t" hidden>
+    <div class="pop-h"><h3 id="themes-t">Theme</h3></div>
+    <div id="theme-grid" role="radiogroup" aria-label="Theme"></div>
+  </div>
+</div>
+
+<aside id="panel" class="float" data-snap="half">
+  <header>
+    <button id="sheet-toggle" type="button" aria-expanded="true" aria-controls="panel-body" aria-label="Show or hide filters"><i></i></button>
+    <div class="ttl">
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <div>
+        <h1>Fifteen Minutes to Rail</h1>
+        <p class="sub">Walking reach around every rapid transit station in Istanbul</p>
+      </div>
+    </div>
+  </header>
+  <div id="panel-body">
+    <div class="controls">
+      <span class="label">Operator</span>
+      <div class="seg" id="ops" role="group" aria-label="Operator"></div>
+    </div>
+    <div class="lines-head">
+      <span class="label">Lines</span>
+      <span class="ab"><button class="txt" type="button" id="all">Select all</button><button class="txt" type="button" id="none">None</button></span>
+      <span class="sel"><b id="sel-n">–</b> stations · <b id="sel-km2">–</b> km² selected<small>approx., overlaps not removed</small></span>
+    </div>
+    <div id="lines" aria-label="Lines"></div>
+  </div>
+</aside>
+
+<div id="stats" class="float" aria-live="polite">
+  <div class="stat"><span class="v num" id="k-stations">–</span><span class="l">stations</span></div>
+  <span class="sep" aria-hidden="true"></span>
+  <div class="stat"><span class="v num" id="k-km2">–</span><span class="l">km² in 15 min</span></div>
+</div>
+
+<aside id="station" class="float" hidden aria-labelledby="st-name">
+  <button class="close-btn" type="button" aria-label="Close station"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
+  <div class="eyebrow"><i aria-hidden="true"></i>Station</div>
+  <h2 id="st-name">–</h2>
+  <div class="codes" id="st-codes"></div>
+  <div class="meta" id="st-meta"></div>
+  <div id="st-hero" class="hero">
+    <div class="big"><span id="st-big" class="num">–</span><span class="u">km²</span></div>
+    <div class="cap">reachable within <b id="st-big-min">15</b> min on foot</div>
+    <div class="bars" id="st-bars"></div>
+  </div>
+  <p id="st-none" hidden>No walkshed: this station lies outside the downloaded network.</p>
+  <button class="send-btn" type="button" id="st-show">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="8"/></svg>
+    Show on map
+  </button>
+  <p class="hint">Areas are street-network reach, not straight-line radius.</p>
+</aside>
+
+<div id="about-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="about-t">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 id="about-t">About this map</h4>
+      <button class="close-btn" type="button" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p>Each shaded area is the street network you can walk from a rapid transit station in <b id="about-min">15</b> minutes at <b id="about-speed">4.5</b> km/h. Entrances of one station are merged. Metro, Marmaray, tram, funicular, cable car and Metrobüs are included.</p>
+      <p>Click a line to toggle it. Ctrl-click or Cmd-click isolates it. Double-click zooms to it. Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to close.</p>
+      <p>The data was computed once by the pipeline and is served as-is. Generated <span id="about-when">–</span>.</p>
+      <p>Street data and basemap tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL. Line list and colours follow the Metro İstanbul network map, July 2026.</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="/static/vendor/leaflet/leaflet.js" nonce="{{CSP_NONCE}}"></script>
+<script type="module" src="/static/js/app.js" nonce="{{CSP_NONCE}}"></script>
+</body>
+</html>

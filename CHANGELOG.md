@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- FastAPI web app (`uv run walkshed-web`) that serves the precomputed artifact:
+  enveloped JSON API, validated query parameters, per-route rate limits, security
+  headers with a nonce-bound CSP, gzip and ETag on data files, JSON logs. Vanilla
+  ES6 front end on the five-variable theme contract with 16 presets, vendored
+  Leaflet, toast, modal, and keyboard support. 72 tests, 99% coverage.
 - Per-node line labels from chained stop matching (`resolve_lines`). Each station node
   keeps only the lines whose ordered stop list picked it; duplicate nodes at shared
   stations and unpicked same-name nodes are dropped. Used by the pipeline and

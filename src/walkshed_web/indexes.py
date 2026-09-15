@@ -23,6 +23,12 @@ class Indexes:
         line = self.by_code.get(code)
         return line.name if line else code
 
+    def filters_are_known(self, operator: str | None, mode: str | None) -> bool:
+        """Allowlist check for the operator and mode query filters."""
+        return (operator is None or operator in self.operators) and (
+            mode is None or mode in self.modes
+        )
+
 
 def build_indexes(meta: MetaDoc) -> Indexes:
     stations_by_code: dict[str, list[StationDoc]] = {}
@@ -35,7 +41,8 @@ def build_indexes(meta: MetaDoc) -> Indexes:
         stations_by_code=MappingProxyType({c: tuple(v) for c, v in stations_by_code.items()}),
         operators=frozenset(s.operator for s in meta.stations)
         | frozenset(line.operator for line in meta.lines),
-        modes=frozenset(s.mode for s in meta.stations) | frozenset(line.mode for line in meta.lines),
+        modes=frozenset(s.mode for s in meta.stations)
+        | frozenset(line.mode for line in meta.lines),
     )
 
 

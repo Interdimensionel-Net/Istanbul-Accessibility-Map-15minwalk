@@ -93,11 +93,21 @@ def pick_payload(cached: CachedFile, request: Request) -> tuple[bytes, str | Non
     return cached.raw, None
 
 
-def is_fresh(cached: CachedFile, request: Request) -> bool:
+def etag_for(cached: CachedFile, encoding: str | None) -> str:
+    """Each representation gets its own validator: the gzip body is not the identity body."""
+    return cached.etag if not encoding else f'{cached.etag[:-1]}-{encoding}"'
+
+
+def _strip_weak(tag: str) -> str:
+    tag = tag.strip()
+    return tag[2:] if tag.startswith("W/") else tag
+
+
+def is_fresh(cached: CachedFile, request: Request, encoding: str | None = None) -> bool:
     """True when the client's validators match and a 304 is the right answer."""
     inm = request.headers.get("if-none-match")
     if inm:
-        tags = {t.strip() for t in inm.split(",")}
-        return cached.etag in tags or "*" in tags
+        tags = {_strip_weak(t) for t in inm.split(",")}
+        return etag_for(cached, encoding) in tags or "*" in tags
     ims = request.headers.get("if-modified-since")
     return bool(ims) and ims == cached.last_modified

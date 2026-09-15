@@ -1,8 +1,10 @@
 """Pure modules: settings, artifact loading, indexes, search, envelope, limiter, security."""
 
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from walkshed_web.artifact import ArtifactError, load_artifact
 from walkshed_web.datafiles import build_cache
@@ -20,13 +22,13 @@ def test_settings_resolve_artifact_dir(tmp_path: Path, monkeypatch):
     s = Settings()
     assert s.artifact_dir == tmp_path.resolve()
     assert s.port == 9001
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         s.port = 1  # frozen
 
 
 def test_settings_reject_bad_port(monkeypatch):
     monkeypatch.setenv("WALKSHED_WEB_PORT", "70000")
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         Settings()
 
 
@@ -40,7 +42,7 @@ def test_artifact_loads_fixture(artifact_dir: Path):
     assert art.basemap is not None and art.basemap["layers"][0]["file"] == "basemap_core.jpg"
     assert art.reference_hash == "39f925f0404f"
     assert "bands.geojson" in art.files and "basemap_core.jpg" in art.files
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         art.meta = None  # frozen
 
 

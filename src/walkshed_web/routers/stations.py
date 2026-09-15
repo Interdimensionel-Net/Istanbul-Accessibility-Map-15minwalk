@@ -37,18 +37,12 @@ def _matches(station: StationDoc, query: StationQuery) -> bool:
     )
 
 
-def _check_filters(query: StationQuery, indexes: Indexes) -> None:
-    if query.operator is not None and query.operator not in indexes.operators:
-        raise ApiError(422)
-    if query.mode is not None and query.mode not in indexes.modes:
-        raise ApiError(422)
-
-
 @router.get("")
 def list_stations(
     query: Annotated[StationQuery, Query()], artifact: ArtifactDep, indexes: IndexesDep
 ) -> dict:
-    _check_filters(query, indexes)
+    if not indexes.filters_are_known(query.operator, query.mode):
+        raise ApiError(422)
     matched = [s for s in artifact.meta.stations if _matches(s, query)]
     page = matched[query.offset : query.offset + query.limit]
     return ok([station_out(s) for s in page], page_meta(len(matched), query.offset, query.limit))
@@ -77,9 +71,7 @@ def get_station(sid: SidPath, artifact: ArtifactDep, indexes: IndexesDep) -> dic
     return ok(
         StationDetailOut(
             **base.model_dump(),
-            line_names=tuple(
-                LineRefOut(code=c, name=indexes.line_name(c)) for c in station.codes
-            ),
+            line_names=tuple(LineRefOut(code=c, name=indexes.line_name(c)) for c in station.codes),
             bands=bands,
             widest=bands[-1] if bands else None,
         )
