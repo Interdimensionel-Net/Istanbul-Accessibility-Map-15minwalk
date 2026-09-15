@@ -1,0 +1,35 @@
+{
+  "stations": [
+    {"sid": 101, "name": "Karaköy", "line": "F2", "mode": "heritage_funicular", "operator": "İETT", "lon": 28.974, "lat": 41.0229, "km2": 1.63, "covered": true},
+    {"sid": 102, "name": "Yenikapı", "line": "M2/B1", "mode": "subway", "operator": "Metro İstanbul", "lon": 28.9516, "lat": 41.0052, "km2": 2.1, "covered": true},
+    {"sid": 103, "name": "Şişli-Mecidiyeköy", "line": "M2", "mode": "subway", "operator": "Metro İstanbul", "lon": 28.9877, "lat": 41.0632, "km2": 0.0, "covered": false}
+  ],
+  "lines": [
+    {"line": "M2", "name": "Yenikapı – Hacıosman", "mode": "subway", "operator": "Metro İstanbul",
+     "coords": [[28.9516, 41.0052], [28.9877, 41.0632]],
+     "stations": [{"name": "Yenikapı", "sid": 102}, {"name": "Şişli-Mecidiyeköy", "sid": 103}, {"name": "Ghost", "sid": null}]},
+    {"line": "F2", "name": "Karaköy – Beyoğlu", "mode": "heritage_funicular", "operator": "İETT",
+     "coords": [[28.974, 41.0229], [28.975, 41.026]],
+     "stations": [{"name": "Karaköy", "sid": 101}]},
+    {"line": "B1", "name": "Halkalı – Gebze", "mode": "suburban_rail", "operator": "TCDD Taşımacılık",
+     "coords": [[28.9516, 41.0052], [29.4, 40.8]],
+     "stations": [{"name": "Yenikapı", "sid": 102}]}
+  ],
+  "routes": 1,
+  "bands": [900],
+  "walk_speed_kmh": 4.5,
+  "total_km2": 3.73,
+  "band_km2": {"900": 3.73},
+  "provenance": {
+    "run_at": "2026-09-15T21:01:08.534592+00:00",
+    "overpass_query_hash": "6c09e74fc2af",
+    "overpass_retrieved_at": "2026-09-15T19:33:38+00:00",
+    "overpass_from_cache": true,
+    "reference_hash": "39f925f0404f",
+    "graph_from_cache": false,
+    "refresh": false,
+    "python": "3.13.1",
+    "packages": {"osmnx": "2.1.1"},
+    "config": {"walk_speed_kmh": 4.5, "cutoff_seconds": 900}
+  }
+}
