@@ -13,9 +13,12 @@ import sys
 import geopandas as gpd
 
 from walkshed.config import DEFAULT_CONFIG
-from walkshed.export import write_artifact_data
+from walkshed.coverage import dissolve_coverage, summarize
+from walkshed.export import resolve_lines, write_artifact_data
+from walkshed.names import load_lines
 from walkshed.overpass import cache_path
 from walkshed.pipeline import provenance
+from walkshed.reference import load_aliases
 from walkshed.render import build_map
 
 
@@ -24,10 +27,22 @@ def main() -> int:
         stream.reconfigure(encoding="utf-8", errors="replace")
     cfg = DEFAULT_CONFIG
     out = cfg.output_dir
-    stations = gpd.read_file(out / "stations.geojson")
+    stations = resolve_lines(
+        gpd.read_file(out / "stations.geojson"),
+        load_lines(cfg.reference_path),
+        load_aliases(cfg.reference_path.with_name("aliases.json")),
+    )
+    labels = stations.set_index("osm_id")[["line", "operator", "mode"]]
     isochrones = gpd.read_file(out / "isochrones.geojson")
-    coverage = gpd.read_file(out / "coverage.geojson")
-    summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    isochrones = isochrones[isochrones["station_id"].isin(labels.index)].copy()
+    for column in ("line", "operator", "mode"):
+        isochrones[column] = isochrones["station_id"].map(labels[column])
+    widest = isochrones[isochrones["band_s"] == isochrones["band_s"].max()]
+    coverage = dissolve_coverage(widest.to_crs(cfg.crs_metric)).to_crs(cfg.crs_geo)
+    summary = summarize(widest.to_crs(cfg.crs_metric), coverage.to_crs(cfg.crs_metric))
+    stations.to_file(out / "stations.geojson", driver="GeoJSON")
+    isochrones.to_file(out / "isochrones.geojson", driver="GeoJSON")
+    coverage.to_file(out / "coverage.geojson", driver="GeoJSON")
     summary = {
         **summary,
         "provenance": provenance(cfg, False, cache_path(cfg).exists(), True),

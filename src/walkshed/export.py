@@ -84,6 +84,21 @@ def _pick(
     return min(pool, key=lambda c: (c[1] - anchor[1]) ** 2 + (c[2] - anchor[2]) ** 2)
 
 
+def _resolve_stops(line: dict, lookup: dict, official: set[str]) -> list[tuple[str, tuple | None]]:
+    """(stop name, chosen node) for every stop on the line, in order, chaining by proximity."""
+    found: list[tuple[str, tuple | None]] = []
+    anchor = None
+    for stop in line_stations(line):
+        hit = _pick(_candidates(stop, lookup, official - {normalize(stop)}), line["mode"], anchor)
+        found.append((stop, hit))
+        anchor = hit or anchor
+    return found
+
+
+def _operating(lines: list[dict]) -> list[dict]:
+    return [line for line in lines if line.get("status", "operating") == "operating"]
+
+
 def line_paths(
     stations: gpd.GeoDataFrame, lines: list[dict], aliases: dict[str, str] | None = None
 ) -> list[dict]:
@@ -91,17 +106,8 @@ def line_paths(
     lookup = _station_lookup(stations, aliases or {})
     official = {normalize(s) for line in lines for s in line_stations(line)}
     paths = []
-    for line in lines:
-        if line.get("status", "operating") != "operating":
-            continue
-        found: list[tuple[str, tuple | None]] = []
-        anchor = None
-        for stop in line_stations(line):
-            hit = _pick(
-                _candidates(stop, lookup, official - {normalize(stop)}), line["mode"], anchor
-            )
-            found.append((stop, hit))
-            anchor = hit or anchor
+    for line in _operating(lines):
+        found = _resolve_stops(line, lookup, official)
         matched = [hit for _, hit in found if hit]
         if len(matched) < 2:
             continue
@@ -116,6 +122,31 @@ def line_paths(
             }
         )
     return paths
+
+
+def resolve_lines(
+    stations: gpd.GeoDataFrame, lines: list[dict], aliases: dict[str, str] | None = None
+) -> gpd.GeoDataFrame:
+    """Authoritative per-node line labels from the chained stop matching.
+
+    Each node keeps only the lines whose ordered stop list picked it; nodes no line picked are
+    dropped. This removes duplicate nodes at shared stations and same-name stations elsewhere.
+    """
+    info = {line["line"]: line for line in lines}
+    lookup = _station_lookup(stations, aliases or {})
+    official = {normalize(s) for line in lines for s in line_stations(line)}
+    picked: dict[int, list[str]] = {}
+    for line in _operating(lines):
+        for _, hit in _resolve_stops(line, lookup, official):
+            if hit is not None:
+                picked.setdefault(hit[0], []).append(line["line"])
+    kept = stations[stations["osm_id"].isin(picked)].copy()
+    codes = kept["osm_id"].map(lambda i: sorted(set(picked[int(i)])))
+    return kept.assign(
+        line=codes.map("/".join),
+        operator=codes.map(lambda c: info[c[0]]["operator"]),
+        mode=codes.map(lambda c: info[c[0]]["mode"]),
+    )
 
 
 def write_artifact_data(

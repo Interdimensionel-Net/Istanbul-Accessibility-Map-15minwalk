@@ -16,12 +16,12 @@ import osmnx as ox
 from walkshed.config import Config
 from walkshed.contracts import ENTRANCES, ISOCHRONES, ORIGINS, STATIONS, require_columns
 from walkshed.coverage import dissolve_coverage, summarize
-from walkshed.export import write_artifact_data
+from walkshed.export import resolve_lines, write_artifact_data
 from walkshed.isochrone import reachable_bands
-from walkshed.names import content_hash
+from walkshed.names import content_hash, load_lines
 from walkshed.network import load_or_build_graph
 from walkshed.overpass import cache_path, fetch_elements, query_hash
-from walkshed.reference import apply_reference
+from walkshed.reference import apply_reference, load_aliases
 from walkshed.render import build_map
 from walkshed.stations import build_origins, parse_elements
 
@@ -127,6 +127,12 @@ def run(cfg: Config, refresh: bool = False) -> dict:
     require_columns(raw_stations, STATIONS, "parse_elements stations")
     require_columns(entrances, ENTRANCES, "parse_elements entrances")
     stations = apply_reference(raw_stations, cfg.reference_path, cfg.require_reference)
+    if cfg.require_reference and cfg.reference_path.exists():
+        stations = resolve_lines(
+            stations,
+            load_lines(cfg.reference_path),
+            load_aliases(cfg.reference_path.with_name("aliases.json")),
+        )
     origins_m = require_columns(build_origins(stations, entrances, cfg), ORIGINS, "build_origins")
     log.info("%d stations, %d entrances, %d origins", len(stations), len(entrances), len(origins_m))
     graph_cached = not refresh and _graph_cache_exists(origins_m, cfg)

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Per-node line labels from chained stop matching (`resolve_lines`). Each station node
+  keeps only the lines whose ordered stop list picked it; duplicate nodes at shared
+  stations and unpicked same-name nodes are dropped. Used by the pipeline and
+  `scripts/render_map.py`.
+
 ## [0.1.0] - 2026-09-15
 
 - First release: Overpass station fetch, reference-list matching, osmnx walk graph,
