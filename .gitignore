@@ -26,3 +26,7 @@ cache/
 Thumbs.db
 
 # Keep: data/reference/ (small, attributed), uv.lock, LICENSE
+
+# Coverage
+.coverage
+htmlcov/
