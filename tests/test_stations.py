@@ -88,3 +88,21 @@ def test_stations_east_of_max_lon_are_dropped(elements):
     ]
     stations, _ = parse_elements(elements + far_east, Config())
     assert "Otogar" not in set(stations["name"])
+
+
+def _node(osm_id, name, lat, lon, **tags):
+    return {"type": "node", "id": osm_id, "lat": lat, "lon": lon, "tags": {"name": name, **tags}}
+
+
+def test_close_platforms_of_one_stop_merge_into_one_station():
+    tram = {"railway": "tram_stop", "tram": "yes"}
+    elements = [
+        _node(1, "Sirkeci", 41.01514, 28.97591, **tram),
+        _node(2, "Sirkeci", 41.01516, 28.97583, **tram),  # 7 m away: same stop, other direction
+        _node(3, "Sirkeci", 41.01361, 28.97714, railway="station", train="yes"),  # rail, kept
+        _node(4, "Sirkeci", 41.02514, 28.97591, **tram),  # 1.1 km away: a different stop
+    ]
+    stations, entrances = parse_elements(elements)
+    assert sorted(stations["osm_id"]) == [1, 3, 4]
+    assert list(entrances["osm_id"]) == [2]
+    assert entrances.iloc[0]["railway"] == "duplicate_platform"
