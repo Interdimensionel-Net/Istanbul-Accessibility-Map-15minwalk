@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import platform
+from pathlib import Path
 from dataclasses import asdict
 from datetime import UTC, datetime
 from importlib.metadata import version
