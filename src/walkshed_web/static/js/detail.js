@@ -3,6 +3,8 @@ import { getJson } from "./api.js";
 import { $, chip, esc, fmt } from "./format.js";
 import { showError } from "./toast.js";
 
+const GOOGLE_MAPS = "https://www.google.com/maps/search/?api=1&query=";
+
 export function createDetail({ onClose, onShow }) {
   const panel = $("#station");
   let current = null;
@@ -25,6 +27,7 @@ export function createDetail({ onClose, onShow }) {
         .map((b) => `<span class="lbl">${b.minutes} min</span><span class="bar"><i style="width:${((100 * b.km2) / max).toFixed(1)}%"></i></span><span class="v">${fmt(b.km2, 2)} km²</span>`)
         .join("");
     }
+    $("#st-gmaps").href = GOOGLE_MAPS + encodeURIComponent(`${s.lat},${s.lon}`);
     panel.hidden = false;
   }
 

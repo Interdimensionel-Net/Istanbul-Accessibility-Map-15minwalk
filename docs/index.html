@@ -684,13 +684,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --line-strong: rgba(16, 24, 32, 0.2);
   --accent: #0b7285;
   --accent-soft: rgba(11, 114, 133, 0.12);
-  --band-5: #2a7fb0;
-  --band-10: #7fb3d3;
-  --band-15: #c3dae8;
-  --band-edge: #e8ff1a;
+  --band-5: #1b5e8c;
+  --band-10: #2f7fb5;
+  --band-15: #4d9bd1;
+  --band-edge: #0b5f85;
   --focus: #e8590c;
   --focus-soft: rgba(232, 89, 12, 0.12);
-  --bands-alpha: 0.6;
+  --bands-alpha: 0.5;
   --ring: #0b7285;
   --shadow: 0 1px 1px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06), 0 18px 44px rgba(16, 24, 32, 0.1);
   --shadow-sm: 0 1px 2px rgba(16, 24, 32, 0.08), 0 6px 18px rgba(16, 24, 32, 0.08);
@@ -785,12 +785,12 @@ svg { display: block; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .leaflet-bands-pane { mix-blend-mode: screen; } }
 
 .leaflet-control-attribution {
-  background: var(--surface); color: var(--ink-3); font: 500 10.5px/1.4 var(--font);
-  padding: 3px 10px; margin: 0 16px 0 0 !important; border-radius: 999px 999px 0 0;
-  border: 1px solid var(--line); border-bottom: 0;
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  background: transparent; color: var(--ink-3); font: 500 9.5px/1.2 var(--font);
+  padding: 0 6px 2px 0; margin: 0 !important; border: 0; border-radius: 0; opacity: 0.55;
+  max-width: 60vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.leaflet-control-attribution a { color: var(--ink-2); text-decoration: none; }
+.leaflet-control-attribution:hover { opacity: 1; background: var(--surface); padding: 2px 8px; border-radius: 6px 0 0 0; white-space: normal; }
+.leaflet-control-attribution a { color: inherit; text-decoration: none; }
 .leaflet-control-attribution a:hover { color: var(--ink); }
 .leaflet-bar { border: 1px solid var(--line); box-shadow: var(--shadow-sm); border-radius: var(--r-md); overflow: hidden; }
 .leaflet-bar a {
@@ -802,7 +802,7 @@ svg { display: block; }
 .leaflet-bar a:hover, .leaflet-bar a:focus { background: var(--surface-solid); color: var(--ink); }
 .leaflet-bar a:first-child { border-radius: 0; }
 .leaflet-bar a:last-child { border-radius: 0; }
-.leaflet-bottom.leaflet-right .leaflet-control-zoom { margin: 0 16px 36px 0; }
+.leaflet-bottom.leaflet-right .leaflet-control-zoom { margin: 0 16px 24px 0; }
 .leaflet-bottom.leaflet-right .leaflet-control-attribution { margin-bottom: env(safe-area-inset-bottom, 0px) !important; }
 .leaflet-tooltip.st {
   background: var(--surface-solid); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
@@ -1077,6 +1077,9 @@ h1 {
   font: 700 13px/1 var(--font); cursor: pointer;
 }
 .btn:hover { background: var(--accent); color: #fff; }
+.actions { display: flex; gap: 8px; }
+.btn.secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-strong); text-decoration: none; }
+.btn.secondary:hover { background: var(--surface-3); color: var(--ink); }
 .btn svg { width: 16px; height: 16px; }
 .close {
   position: absolute; top: 12px; right: 12px; width: 30px; height: 30px;
@@ -1108,7 +1111,7 @@ h1 {
   .stat .v { font-size: 14px; }
   .stat .l { font-size: 10px; }
   .sep { height: 20px; }
-  .leaflet-top.leaflet-right .leaflet-control-attribution { margin: calc(16px + env(safe-area-inset-top, 0px) + 58px) 16px 0 0 !important; border-radius: 999px; border-bottom: 1px solid var(--line); }
+  .leaflet-top.leaflet-right .leaflet-control-attribution { margin: calc(16px + env(safe-area-inset-top, 0px) + 58px) 16px 0 0 !important; max-width: 50vw; }
   #panel {
     top: auto; left: 0; right: 0; width: auto; max-width: none;
     bottom: 0;
@@ -1247,10 +1250,16 @@ h1 {
     <div class="bars" id="st-bars"></div>
   </div>
   <p id="st-none" hidden>No walkshed: this station lies outside the downloaded network.</p>
-  <button class="btn" type="button" id="st-show">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="8"/></svg>
-    Show on map
-  </button>
+  <div class="actions">
+    <button class="btn" type="button" id="st-show" title="Re-centre the map on this station">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="8"/></svg>
+      Zoom to station
+    </button>
+    <a class="btn secondary" id="st-gmaps" href="#" target="_blank" rel="noopener" title="Open this station in Google Maps">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      Google Maps
+    </a>
+  </div>
   <p class="hint">Areas are street-network reach, not straight-line radius.</p>
 </aside>
 
@@ -1550,6 +1559,7 @@ h1 {
         `<span class="lbl">${b / 60} min</span><span class="bar"><i style="width:${(100 * k[b] / max).toFixed(1)}%;background:var(${BAND_VAR[b]})"></i></span><span class="v">${fmt(k[b], 2)} km²</span>`
       ).join("");
     }
+    $("#st-gmaps").href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${s.lat},${s.lon}`);
     $("#station").hidden = false;
     setSnap("peek");
     applyFilters();
