@@ -1,0 +1,1072 @@
+<meta charset="utf-8">
+<title>Fifteen Minutes to Rail</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+/* __LEAFLET_CSS__ */
+
+:root {
+  --water: #dde5eb;
+  --land: #f4f1ea;
+  --land-edge: #cfc9bc;
+  --ink: #101820;
+  --ink-2: #4c5866;
+  --ink-3: #7d8896;
+  --on-ink: #ffffff;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-solid: #ffffff;
+  --surface-2: rgba(16, 24, 32, 0.05);
+  --surface-3: rgba(16, 24, 32, 0.09);
+  --line: rgba(16, 24, 32, 0.1);
+  --line-strong: rgba(16, 24, 32, 0.2);
+  --accent: #0b7285;
+  --accent-soft: rgba(11, 114, 133, 0.12);
+  --band-5: #2a7fb0;
+  --band-10: #7fb3d3;
+  --band-15: #c3dae8;
+  --band-edge: #e8ff1a;
+  --focus: #e8590c;
+  --focus-soft: rgba(232, 89, 12, 0.12);
+  --bands-alpha: 0.6;
+  --ring: #0b7285;
+  --shadow: 0 1px 1px rgba(16, 24, 32, 0.04), 0 4px 12px rgba(16, 24, 32, 0.06), 0 18px 44px rgba(16, 24, 32, 0.1);
+  --shadow-sm: 0 1px 2px rgba(16, 24, 32, 0.08), 0 6px 18px rgba(16, 24, 32, 0.08);
+  --tile-filter: grayscale(0.6) contrast(0.9) opacity(0.85);
+  --font: "Manrope", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --r-lg: 18px;
+  --r-md: 12px;
+  --r-sm: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --water: #0c1116;
+    --land: #171d24;
+    --land-edge: #29323c;
+    --ink: #eef2f6;
+    --ink-2: #aab4bf;
+    --ink-3: #76818d;
+    --on-ink: #0c1116;
+    --surface: rgba(24, 29, 36, 0.82);
+    --surface-solid: #1d232b;
+    --surface-2: rgba(255, 255, 255, 0.06);
+    --surface-3: rgba(255, 255, 255, 0.1);
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.2);
+    --accent: #5fc4d8;
+    --accent-soft: rgba(95, 196, 216, 0.14);
+    --band-5: #7fc6ea;
+    --band-10: #3d7ea6;
+    --band-15: #22455c;
+    --band-edge: #f4ff3d;
+    --focus: #ff8b4a;
+    --focus-soft: rgba(255, 139, 74, 0.16);
+    --ring: #8ed0ee;
+    --shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.35), 0 22px 56px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.4);
+    --tile-filter: invert(1) hue-rotate(180deg) grayscale(0.7) brightness(0.75) contrast(0.95) opacity(0.8);
+  }
+}
+:root[data-theme="dark"] {
+  --water: #0c1116;
+  --land: #171d24;
+  --land-edge: #29323c;
+  --ink: #eef2f6;
+  --ink-2: #aab4bf;
+  --ink-3: #76818d;
+  --on-ink: #0c1116;
+  --surface: rgba(24, 29, 36, 0.82);
+  --surface-solid: #1d232b;
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --surface-3: rgba(255, 255, 255, 0.1);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --accent: #5fc4d8;
+  --accent-soft: rgba(95, 196, 216, 0.14);
+  --band-5: #7fc6ea;
+  --band-10: #3d7ea6;
+  --band-15: #22455c;
+  --band-edge: #f4ff3d;
+  --focus: #ff8b4a;
+  --focus-soft: rgba(255, 139, 74, 0.16);
+  --ring: #8ed0ee;
+  --shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.35), 0 22px 56px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.4);
+  --tile-filter: invert(1) hue-rotate(180deg) grayscale(0.7) brightness(0.75) contrast(0.95) opacity(0.8);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--water);
+  color: var(--ink);
+  font: 14px/1.45 var(--font);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button { font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+b { font-weight: 700; }
+.num { font-variant-numeric: tabular-nums; }
+svg { display: block; }
+
+/* Map */
+#map { position: absolute; inset: 0; background: var(--water); }
+.leaflet-container { background: var(--water); font-family: var(--font); }
+:root[data-tiles="filter"] .leaflet-tile-pane { filter: var(--tile-filter); }
+.leaflet-basemap-pane { filter: var(--tile-filter); }
+.leaflet-bands-pane { opacity: var(--bands-alpha); mix-blend-mode: multiply; }
+:root[data-theme="dark"] .leaflet-bands-pane { mix-blend-mode: screen; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .leaflet-bands-pane { mix-blend-mode: screen; } }
+
+.leaflet-control-attribution {
+  background: var(--surface); color: var(--ink-3); font: 500 10.5px/1.4 var(--font);
+  padding: 3px 10px; margin: 0 16px 0 0 !important; border-radius: 999px 999px 0 0;
+  border: 1px solid var(--line); border-bottom: 0;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.leaflet-control-attribution a { color: var(--ink-2); text-decoration: none; }
+.leaflet-control-attribution a:hover { color: var(--ink); }
+.leaflet-bar { border: 1px solid var(--line); box-shadow: var(--shadow-sm); border-radius: var(--r-md); overflow: hidden; }
+.leaflet-bar a {
+  width: 38px; height: 38px; line-height: 38px;
+  background: var(--surface); color: var(--ink); border-bottom-color: var(--line);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-family: var(--font); font-weight: 500; font-size: 20px;
+}
+.leaflet-bar a:hover, .leaflet-bar a:focus { background: var(--surface-solid); color: var(--ink); }
+.leaflet-bar a:first-child { border-radius: 0; }
+.leaflet-bar a:last-child { border-radius: 0; }
+.leaflet-bottom.leaflet-right .leaflet-control-zoom { margin: 0 16px 36px 0; }
+.leaflet-bottom.leaflet-right .leaflet-control-attribution { margin-bottom: env(safe-area-inset-bottom, 0px) !important; }
+.leaflet-tooltip.st {
+  background: var(--surface-solid); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+  font: 600 12.5px/1.3 var(--font); box-shadow: var(--shadow-sm); padding: 6px 10px;
+}
+.leaflet-tooltip.st::before { display: none; }
+.leaflet-tooltip.st .code { font-size: 10px; padding: 2px 5px; margin-right: 5px; vertical-align: 1px; }
+
+/* Floating glass surfaces */
+.float {
+  position: absolute;
+  z-index: 1000;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+.pop {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 2;
+  background: var(--surface-solid); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow);
+}
+
+/* Code chips in official line colours */
+.code {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 22px;
+  font: 800 11.5px/1 var(--font);
+  letter-spacing: 0.02em;
+  color: #fff;
+  border-radius: 6px;
+  padding: 0 6px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Top bar */
+#bar {
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: 16px;
+  width: 372px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 14px;
+}
+.search { position: relative; flex: 1; display: flex; align-items: center; min-width: 0; }
+.search > svg { position: absolute; left: 12px; width: 17px; height: 17px; color: var(--ink-3); pointer-events: none; }
+.search input {
+  width: 100%;
+  height: 38px;
+  font: 500 14px var(--font);
+  padding: 0 38px 0 38px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.search input:hover { background: var(--surface-2); }
+.search input::placeholder { color: var(--ink-3); font-weight: 500; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search input:focus-visible { outline-offset: -2px; background: var(--surface-2); }
+.search kbd {
+  position: absolute; right: 12px; font: 600 11px/1 var(--font); color: var(--ink-3);
+  border: 1px solid var(--line-strong); border-radius: 5px; padding: 3px 6px; pointer-events: none;
+}
+.search input:focus ~ kbd { display: none; }
+.ib {
+  width: 38px; height: 38px; flex: none;
+  display: grid; place-items: center;
+  border: 0; border-radius: 10px; background: transparent; color: var(--ink-2); cursor: pointer;
+}
+.ib:hover { background: var(--surface-2); color: var(--ink); }
+.ib[aria-expanded="true"] { background: var(--ink); color: var(--on-ink); }
+.ib svg { width: 18px; height: 18px; }
+#theme[data-mode="light"] .sun, #theme[data-mode="dark"] .moon { display: none; }
+
+#hits { margin: 0; padding: 5px; list-style: none; }
+#hits li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer; font-size: 13.5px; font-weight: 500;
+}
+#hits li[aria-selected="true"], #hits li:hover { background: var(--surface-2); }
+#hits .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pop-h { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
+.pop-h h3 { font: 800 15px/1.2 var(--font); letter-spacing: -0.01em; margin: 0; color: var(--ink); }
+#about { padding: 0 0 6px; font-size: 13px; color: var(--ink-2); }
+#about .pop-b { padding: 4px 16px 8px; }
+#about p { margin: 0 0 10px; }
+#about a { color: var(--accent); font-weight: 600; text-decoration: none; }
+#about a:hover { text-decoration: underline; }
+#about kbd { font: 600 11px/1 var(--font); border: 1px solid var(--line-strong); border-radius: 4px; padding: 2px 5px; }
+
+/* Basemap popover */
+#basemap { padding: 0 0 6px; }
+#base-list { display: flex; flex-direction: column; gap: 2px; padding: 4px 6px; }
+#base-list button {
+  display: grid; grid-template-columns: 22px 1fr 18px; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 10px; border: 0; border-radius: var(--r-sm); background: transparent;
+  color: var(--ink); text-align: left; cursor: pointer; font: 600 13px/1.3 var(--font);
+}
+#base-list button:hover { background: var(--surface-2); }
+#base-list button[aria-checked="true"] { background: var(--accent-soft); }
+#base-list small { display: block; font-size: 11.5px; font-weight: 500; color: var(--ink-3); }
+#base-list .ck { width: 16px; height: 16px; color: var(--accent); opacity: 0; }
+#base-list button[aria-checked="true"] .ck { opacity: 1; }
+.sw { width: 22px; height: 22px; border-radius: 7px; border: 1px solid var(--line-strong); }
+.sw-auto { background: linear-gradient(135deg, #f2f2f0 0 50%, #1c1c1c 50% 100%); }
+.sw-osm { background: linear-gradient(135deg, #ebe5d8, #b8d7ea); }
+.sw-positron { background: #f2f2f0; }
+.sw-darkmatter { background: #1c1c1c; }
+.sw-voyager { background: linear-gradient(135deg, #fbf3e3, #cfe0ec); }
+.sw-topo { background: linear-gradient(135deg, #d9e6c8, #efe6d2); }
+.note { margin: 4px 16px 6px; font-size: 11.5px; line-height: 1.4; color: var(--ink-3); }
+
+/* Sidebar */
+#panel {
+  top: calc(16px + env(safe-area-inset-top, 0px) + 60px);
+  left: 16px;
+  width: 372px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100% - 16px - 60px - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#panel header { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); position: relative; flex: none; }
+#sheet-toggle { display: none; }
+.ttl { display: flex; align-items: center; gap: 12px; }
+.mark {
+  width: 40px; height: 40px; flex: none; border-radius: 12px;
+  background: var(--ink); color: var(--on-ink);
+  display: grid; place-items: center;
+}
+.mark svg { width: 22px; height: 22px; }
+h1 {
+  font: 800 18px/1.15 var(--font);
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+  text-wrap: balance;
+}
+.sub { color: var(--ink-2); font-size: 12.5px; margin: 0; line-height: 1.35; }
+#panel-body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+
+.controls { padding: 14px 18px 12px; display: flex; flex-direction: column; gap: 8px; }
+.label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+.seg {
+  display: flex; gap: 2px; padding: 3px;
+  background: var(--surface-3); border-radius: 10px;
+}
+.seg button {
+  flex: 1; min-width: 0; padding: 7px 8px;
+  border: 0; border-radius: 8px; background: transparent;
+  font: 700 12.5px/1.2 var(--font); color: var(--ink-2); cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--surface-solid); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--line); }
+
+.lines-head {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center;
+  padding: 6px 18px 8px;
+}
+.sel { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); }
+.sel b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.sel small { display: block; font-size: 11px; color: var(--ink-3); }
+.ab { display: flex; gap: 2px; }
+.txt {
+  font: 700 12px/1 var(--font); padding: 6px 9px; border: 0; border-radius: var(--r-sm);
+  background: transparent; color: var(--accent); cursor: pointer;
+}
+.txt:hover { background: var(--accent-soft); }
+
+#lines { overflow-y: auto; padding: 0 10px 10px; overscroll-behavior: contain; }
+.group { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; padding: 12px 8px 6px; }
+.linerow { display: grid; grid-template-columns: 1fr 32px; align-items: stretch; gap: 2px; }
+.line {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.line:hover { background: var(--surface-2); }
+.line[aria-pressed="false"] { opacity: 0.42; }
+.line[aria-pressed="false"] .code { filter: grayscale(0.7); }
+.line .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.line .n { font-variant-numeric: tabular-nums; color: var(--ink-3); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.line .n small { font-size: 10.5px; font-weight: 500; margin-left: 2px; }
+.exp {
+  border: 0; background: transparent; color: var(--ink-3); cursor: pointer; border-radius: 10px;
+  display: grid; place-items: center; padding: 0;
+}
+.exp:hover { background: var(--surface-2); color: var(--ink); }
+.exp svg { width: 15px; height: 15px; transition: transform 180ms ease; }
+.exp[aria-expanded="true"] svg { transform: rotate(180deg); }
+.stops {
+  list-style: none; margin: 2px 0 8px 27px; padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--stop-color, var(--line));
+}
+.stops li { display: flex; }
+.stop {
+  flex: 1; text-align: left; border: 0; background: transparent; color: var(--ink-2); cursor: pointer;
+  font: 500 12.5px/1.3 var(--font); padding: 5px 8px; border-radius: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stop:hover { background: var(--surface-2); color: var(--ink); }
+.stop[disabled] { opacity: 0.45; cursor: default; }
+
+/* Stats strip */
+#stats {
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 16px;
+  border-radius: 14px;
+}
+.stat { display: flex; flex-direction: column; gap: 1px; }
+.stat .v { font: 800 18px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 11px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; }
+.sep { width: 1px; height: 26px; background: var(--line-strong); }
+
+/* Station sheet */
+#station {
+  right: 16px;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  width: 336px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100% - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  padding: 18px 20px 18px;
+}
+.eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--focus); font-weight: 800; margin-bottom: 8px; }
+.eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--focus); box-shadow: 0 0 0 3px var(--focus-soft); }
+#station h2 { font: 800 28px/1.05 var(--font); letter-spacing: -0.03em; margin: 0 0 10px; padding-right: 32px; text-wrap: balance; }
+#station .codes { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+#station .meta { color: var(--ink-2); font-size: 12.5px; font-weight: 500; margin-bottom: 16px; line-height: 1.5; }
+#station .meta .op { color: var(--ink-3); margin-top: 2px; }
+.hero { padding: 14px 16px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); margin-bottom: 12px; }
+.big { display: flex; align-items: baseline; gap: 6px; }
+.big span:first-child { font: 800 52px/0.95 var(--font); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+.big .u { font: 700 18px/1 var(--font); color: var(--ink-2); }
+.cap { font-size: 12.5px; color: var(--ink-2); margin: 6px 0 12px; }
+.cap b { color: var(--ink); }
+.bars { display: grid; grid-template-columns: auto 1fr auto; gap: 7px 10px; align-items: center; font-size: 12.5px; }
+.bars .lbl { color: var(--ink-2); font-weight: 600; }
+.bars .bar { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.bars .bar i { display: block; height: 100%; border-radius: 4px; }
+.bars .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 40px; padding: 0 14px;
+  border: 0; border-radius: 11px; background: var(--ink); color: var(--on-ink);
+  font: 700 13px/1 var(--font); cursor: pointer;
+}
+.btn:hover { background: var(--accent); color: #fff; }
+.btn svg { width: 16px; height: 16px; }
+.close {
+  position: absolute; top: 12px; right: 12px; width: 30px; height: 30px;
+  border: 0; border-radius: 9px; background: var(--surface-2); color: var(--ink-2); cursor: pointer;
+  display: grid; place-items: center;
+}
+.close svg { width: 14px; height: 14px; }
+.close:hover { background: var(--surface-3); color: var(--ink); }
+.hint { font-size: 11.5px; color: var(--ink-3); margin: 12px 0 0; }
+#st-none { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
+
+/* Loading */
+#loading {
+  position: absolute; inset: 0; z-index: 2000; display: grid; place-content: center; gap: 10px; text-align: center;
+  background: var(--water); color: var(--ink-2);
+}
+#loading .t { font: 800 30px/1.1 var(--font); letter-spacing: -0.03em; color: var(--ink); }
+#loading .p { width: 200px; height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; margin: 6px auto; }
+#loading .p i { display: block; width: 40%; height: 100%; background: var(--accent); border-radius: 2px; }
+#loading .s { font-size: 13px; font-weight: 500; }
+
+/* Phone: bottom sheets with snap heights */
+@media (max-width: 640px) {
+  #bar { width: auto; right: 16px; }
+  #stats {
+    top: calc(16px + env(safe-area-inset-top, 0px) + 58px); bottom: auto;
+    padding: 6px 12px; gap: 10px; border-radius: 12px;
+  }
+  .stat .v { font-size: 14px; }
+  .stat .l { font-size: 10px; }
+  .sep { height: 20px; }
+  .leaflet-top.leaflet-right .leaflet-control-attribution { margin: calc(16px + env(safe-area-inset-top, 0px) + 58px) 16px 0 0 !important; border-radius: 999px; border-bottom: 1px solid var(--line); }
+  #panel {
+    top: auto; left: 0; right: 0; width: auto; max-width: none;
+    bottom: 0;
+    height: 52%;
+    max-height: none;
+    border-radius: 22px 22px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #panel[data-snap="peek"] { height: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  #panel[data-snap="full"] { height: calc(100% - 16px - 58px - env(safe-area-inset-top, 0px)); }
+  #panel.dragging { transition: none !important; }
+  #panel header { padding: 6px 18px 12px; }
+  #sheet-toggle {
+    display: block; width: 100%; height: 22px; margin: 0; padding: 0;
+    border: 0; background: transparent; cursor: grab; touch-action: none;
+  }
+  #sheet-toggle i { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto; }
+  .mark { width: 34px; height: 34px; border-radius: 10px; }
+  .mark svg { width: 19px; height: 19px; }
+  h1 { font-size: 16px; }
+  .sub { font-size: 12px; }
+  #station {
+    top: auto; right: 0; left: 0; width: auto; max-width: none; z-index: 1100;
+    bottom: 0;
+    max-height: 64%;
+    border-radius: 22px 22px 0 0;
+    border-bottom: 0;
+    padding: 16px 20px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  #station::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: -4px auto 12px; }
+  .leaflet-control-zoom { display: none; }
+}
+
+/* Motion */
+@media (prefers-reduced-motion: no-preference) {
+  .ib, .line, .txt, .stop, .exp, .seg button, .btn, .close, #base-list button, .leaflet-bar a { transition: background-color 140ms ease, color 140ms ease, opacity 180ms ease, box-shadow 140ms ease; }
+  #station:not([hidden]) { animation: rise 280ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .pop { animation: fade 140ms ease; }
+  #panel { transition: height 280ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  body.ready #bar, body.ready #panel, body.ready #stats { animation: rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  body.ready #panel { animation-delay: 60ms; }
+  body.ready #stats { animation-delay: 120ms; }
+  #loading .p i { animation: load 1.2s ease-in-out infinite; }
+  .bars .bar i { transition: width 320ms ease; }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(10px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes load { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+</style>
+
+<div id="map" role="application" aria-label="Map of Istanbul with walking catchments around rail stations"></div>
+<div id="loading" aria-live="polite">
+  <div class="t">Fifteen Minutes to Rail</div>
+  <div class="p"><i></i></div>
+  <div class="s">Loading the walking network…</div>
+</div>
+
+<div id="bar" class="float">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="search" id="search" placeholder="Find a station" autocomplete="off" aria-label="Find a station" role="combobox" aria-expanded="false" aria-controls="hits" aria-autocomplete="list">
+    <kbd aria-hidden="true">/</kbd>
+  </div>
+  <button class="ib" id="base-btn" type="button" aria-label="Choose a basemap" aria-expanded="false" aria-controls="basemap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+  </button>
+  <button class="ib" id="theme" type="button" data-mode="light" aria-label="Switch to dark theme">
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <button class="ib" id="about-btn" type="button" aria-label="About this map" aria-expanded="false" aria-controls="about">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+  </button>
+  <ul id="hits" class="pop" role="listbox" aria-label="Matching stations" hidden></ul>
+  <div id="basemap" class="pop" role="dialog" aria-labelledby="base-t" hidden>
+    <div class="pop-h"><h3 id="base-t">Basemap</h3></div>
+    <div id="base-list" role="radiogroup" aria-label="Basemap"></div>
+    <p class="note">Live tiles may be blocked on some hosts. The built-in sheet is then shown.</p>
+  </div>
+  <div id="about" class="pop" role="dialog" aria-labelledby="about-t" hidden>
+    <div class="pop-h"><h3 id="about-t">About this map</h3></div>
+    <button class="close" type="button" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
+    <div class="pop-b">
+      <p>Each shaded area is the street network you can walk from a rapid transit station in 5, 10 or 15 minutes at <b id="about-speed">4.5</b> km/h. Entrances of one station are merged. Metro, Marmaray, tram, funicular, cable car and Metrobüs are included.</p>
+      <p>Click a line to toggle it. Ctrl-click or Cmd-click isolates it. Double-click zooms to it. Press <kbd>/</kbd> to search.</p>
+      <p>Street data and basemap tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL. Line list and colours follow the Metro İstanbul network map, July 2026.</p>
+    </div>
+  </div>
+</div>
+
+<aside id="panel" class="float" data-snap="half">
+  <header>
+    <button id="sheet-toggle" type="button" aria-expanded="true" aria-controls="panel-body" aria-label="Show or hide filters"><i></i></button>
+    <div class="ttl">
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <div>
+        <h1>Fifteen Minutes to Rail</h1>
+        <p class="sub">Walking reach around every rapid transit station in Istanbul</p>
+      </div>
+    </div>
+  </header>
+  <div id="panel-body">
+    <div class="controls">
+      <span class="label">Operator</span>
+      <div class="seg" role="group" aria-label="Operator">
+        <button type="button" data-op="Metro İstanbul" aria-pressed="true" id="op-metro">Metro İstanbul</button>
+        <button type="button" data-op="TCDD Taşımacılık" aria-pressed="true" id="op-tcdd">TCDD</button>
+        <button type="button" data-op="İETT" aria-pressed="true" id="op-iett">İETT</button>
+      </div>
+    </div>
+    <div class="lines-head">
+      <span class="label">Lines</span>
+      <span class="ab"><button class="txt" type="button" id="all">Select all</button><button class="txt" type="button" id="none">None</button></span>
+      <span class="sel"><b id="sel-n">–</b> stations · <b id="sel-km2">–</b> km² selected<small>approx., overlaps not removed</small></span>
+    </div>
+    <div id="lines" aria-label="Lines"></div>
+  </div>
+</aside>
+
+<div id="stats" class="float" aria-live="polite">
+  <div class="stat"><span class="v num" id="k-stations">–</span><span class="l">stations</span></div>
+  <span class="sep" aria-hidden="true"></span>
+  <div class="stat"><span class="v num" id="k-km2">–</span><span class="l">km² in 15 min</span></div>
+</div>
+
+<aside id="station" class="float" hidden aria-labelledby="st-name">
+  <button class="close" type="button" aria-label="Close station"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
+  <div class="eyebrow"><i aria-hidden="true"></i>Station</div>
+  <h2 id="st-name">–</h2>
+  <div class="codes" id="st-codes"></div>
+  <div class="meta" id="st-meta"></div>
+  <div id="st-hero" class="hero">
+    <div class="big"><span id="st-big" class="num">–</span><span class="u">km²</span></div>
+    <div class="cap">reachable within <b id="st-big-min">15</b> min on foot</div>
+    <div class="bars" id="st-bars"></div>
+  </div>
+  <p id="st-none" hidden>No walkshed: this station lies outside the downloaded network.</p>
+  <button class="btn" type="button" id="st-show">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="8"/></svg>
+    Show on map
+  </button>
+  <p class="hint">Areas are street-network reach, not straight-line radius.</p>
+</aside>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const BANDS = [900];
+  const BAND_VAR = { 300: "--band-5", 600: "--band-10", 900: "--band-15" };
+  const OPS = ["Metro İstanbul", "TCDD Taşımacılık", "İETT"];
+  // Line colours sampled from the "Lines In Operation" legend of the Metro İstanbul network map.
+  const LINE_COLORS = {
+    M1A: "#e3202b", M1B: "#e3202b", M2: "#009a4e", M3: "#00a7e1", M4: "#e5007e", M5: "#5a2a82",
+    M6: "#b39366", M7: "#e78fbb", M8: "#1b3f94", M9: "#f6c800", M11: "#7b3f98",
+    B1: "#1d3b7a", B2: "#1d3b7a", T1: "#1e6cb5", T2: "#94b8a5", T3: "#8a4a2b", T4: "#f28c1e",
+    T5: "#7c4ea3", T6: "#d7482f", F1: "#8d8358", F2: "#8d8358", F3: "#8d8358", F4: "#8d8358",
+    TF1: "#3aa6a0", TF2: "#3aa6a0", "34": "#c9b34a",
+  };
+  const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>';
+  const CARTO_ATTR = OSM_ATTR + ' &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+  // Open tile layers. "filter" marks OpenStreetMap-styled layers that get the dark-theme CSS filter.
+  const BASEMAPS = [
+    { id: "osm", name: "OpenStreetMap", url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", maxZoom: 19, attr: OSM_ATTR, filter: true },
+    { id: "positron", name: "Positron", sub: "CARTO, light", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", subdomains: "abcd", maxZoom: 20, attr: CARTO_ATTR },
+    { id: "darkmatter", name: "Dark Matter", sub: "CARTO, dark", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", subdomains: "abcd", maxZoom: 20, attr: CARTO_ATTR },
+    { id: "voyager", name: "Voyager", sub: "CARTO, colour", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", subdomains: "abcd", maxZoom: 20, attr: CARTO_ATTR },
+    { id: "topo", name: "OpenTopoMap", sub: "Terrain and contours", url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", subdomains: "abc", maxZoom: 17, attr: OSM_ATTR + ', SRTM; style &copy; <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA)', filter: true },
+  ];
+  const root = document.documentElement;
+  const css = (v) => getComputedStyle(root).getPropertyValue(v).trim();
+  const lineColor = (code) => LINE_COLORS[code] || "#888";
+  const textOn = (hex) => {
+    const n = parseInt(hex.slice(1), 16);
+    const lum = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+    return lum > 170 ? "#101820" : "#fff";
+  };
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const chip = (c) => `<span class="code" style="background:${lineColor(c)};color:${textOn(lineColor(c))}">${esc(c)}</span>`;
+  const fmt = (n, d) => Number(n).toLocaleString("en-GB", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  const codesOf = (s) => s.line.split("/");
+  const lineName = (code) => { const l = meta.lines.find((x) => x.line === code); return l ? `${code} ${l.name}` : code; };
+  const phoneMq = window.matchMedia("(max-width: 640px)");
+  const isPhone = () => phoneMq.matches;
+
+  const state = { bands: new Set(BANDS), ops: new Set(OPS), lines: new Set(), focus: null };
+  let meta, bands, bandLayer, edgeLayer, lineLayer, stationLayer, landLayer, trackGeo = null, lineOf = [], staticBase = null;
+  const stationsById = new Map();
+  const km2ById = new Map();
+
+  /* Theme */
+  try { const t = localStorage.getItem("theme"); if (t === "dark" || t === "light") root.dataset.theme = t; } catch (e) { /* storage unavailable */ }
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const isDark = () => (root.dataset.theme ? root.dataset.theme === "dark" : mq.matches);
+  const syncThemeButton = () => {
+    const d = isDark();
+    const b = $("#theme");
+    b.dataset.mode = d ? "dark" : "light";
+    b.setAttribute("aria-label", d ? "Switch to light theme" : "Switch to dark theme");
+  };
+  $("#theme").addEventListener("click", () => {
+    const t = isDark() ? "light" : "dark";
+    root.dataset.theme = t;
+    try { localStorage.setItem("theme", t); } catch (e) { /* storage unavailable */ }
+  });
+  syncThemeButton();
+
+  /* Map: drawn land polygon below the tiles, tiles below the walksheds */
+  const map = L.map("map", { preferCanvas: true, zoomControl: false, minZoom: 9, maxZoom: 17 });
+  map.attributionControl.setPrefix(false);
+  map.createPane("land").style.zIndex = 150;
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+
+  /* Basemap switcher: Positron by day, Dark Matter by night, unless the user picked one */
+  let basePick = null;
+  try { const b = localStorage.getItem("basemap"); if (BASEMAPS.some((x) => x.id === b)) basePick = b; } catch (e) { /* storage unavailable */ }
+  const activeBase = () => basePick || (isDark() ? "darkmatter" : "positron");
+  let tiles = null;
+  let tilesId = null;
+  function applyBase() {
+    const def = BASEMAPS.find((b) => b.id === activeBase());
+    if (tiles && tilesId !== def.id) { map.removeLayer(tiles); tiles = null; }
+    if (!tiles) {
+      tiles = L.tileLayer(def.url, { subdomains: def.subdomains || "abc", maxZoom: def.maxZoom, attribution: def.attr }).addTo(map);
+      tilesId = def.id;
+    }
+    root.dataset.tiles = def.filter && isDark() ? "filter" : "none";
+    $$("#base-list [data-base]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.base === (basePick || ""))));
+  }
+  const baseList = $("#base-list");
+  baseList.innerHTML = [{ id: "", name: "Auto", sub: "Positron by day, Dark Matter by night" }].concat(BASEMAPS).map((b) =>
+    `<button type="button" role="radio" data-base="${b.id}" aria-checked="false"><span class="sw sw-${b.id || "auto"}" aria-hidden="true"></span><span><span class="bn">${b.name}</span>${b.sub ? `<small>${b.sub}</small>` : ""}</span><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 4.5"/></svg></button>`
+  ).join("");
+  baseList.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-base]");
+    if (!b) return;
+    basePick = b.dataset.base || null;
+    try { if (basePick) localStorage.setItem("basemap", basePick); else localStorage.removeItem("basemap"); } catch (err) { /* storage unavailable */ }
+    applyBase();
+  });
+  applyBase();
+
+  Promise.all([
+    fetch("meta.json").then((r) => r.json()),
+    fetch("bands.geojson").then((r) => r.json()),
+    fetch("provinces.geojson").then((r) => r.json()),
+    fetch("routes.geojson").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    fetch("basemap.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+  ]).then(([m, b, land, routes, basemap]) => {
+    staticBase = basemap;
+    meta = m;
+    trackGeo = routes && routes.features && routes.features.length ? routes : null;
+    bands = { ...b, features: [...b.features].sort((x, y) => y.properties.band - x.properties.band) };
+    build(land);
+  }).catch((e) => {
+    $("#loading .s").textContent = "The map data did not load. Reload the page.";
+    $("#loading .p").hidden = true;
+    console.error(e);
+  });
+
+  const landStyle = () => ({ color: css("--land-edge"), weight: 1, fillColor: css("--land"), fillOpacity: 1 });
+  const bandStyle = (f) => ({ fillColor: css(BAND_VAR[f.properties.band]), fillOpacity: 1, stroke: false });
+  // Borders are drawn first and the opaque fills on top, in the same faded pane: interior seams
+  // between neighbouring stations are covered, only the outer edge of the merged surface remains.
+  const edgeStyle = () => ({ fill: false, color: css("--band-edge"), weight: 7, opacity: 1, lineJoin: "round" });
+
+  function build(land) {
+    landLayer = L.geoJSON(land, { pane: "land", interactive: false, style: landStyle }).addTo(map);
+    if (staticBase && staticBase.layers) {
+      // Pre-rendered OpenStreetMap sheets for hosts that block live tiles. Live tiles cover them when they load.
+      map.createPane("basemap").style.zIndex = 180;
+      staticBase.layers.forEach((l) => L.imageOverlay(l.file, l.bounds, { pane: "basemap", interactive: false }).addTo(map));
+    }
+    meta.stations.forEach((s) => stationsById.set(String(s.sid), s));
+    meta.lines.forEach((l) => state.lines.add(l.line));
+    bands.features.forEach((f) => {
+      const p = f.properties;
+      km2ById.set(String(p.sid), { ...(km2ById.get(String(p.sid)) || {}), [p.band]: p.km2 });
+    });
+
+    map.createPane("bands").style.zIndex = 390;
+    edgeLayer = L.geoJSON(bands, { pane: "bands", style: edgeStyle, interactive: false }).addTo(map);
+    bandLayer = L.geoJSON(bands, { pane: "bands", style: bandStyle, interactive: false }).addTo(map);
+    const lineStyle = (code) => ({ color: lineColor(code), weight: 3, opacity: 0.9, interactive: false, lineJoin: "round", lineCap: "round", smoothFactor: 0.8 });
+    if (trackGeo) {
+      lineOf = trackGeo.features.map((f) => meta.lines.find((l) => l.line === f.properties.line) || { line: f.properties.line, operator: f.properties.operator });
+      lineLayer = L.layerGroup(trackGeo.features.map((f) => L.geoJSON(f, { style: () => lineStyle(f.properties.line), interactive: false }))).addTo(map);
+    } else {
+      lineOf = meta.lines;
+      lineLayer = L.layerGroup(meta.lines.map((l) => L.polyline(l.coords.map(([x, y]) => [y, x]), lineStyle(l.line)))).addTo(map);
+    }
+    stationLayer = L.layerGroup(meta.stations.map((s) => {
+      const mk = L.circleMarker([s.lat, s.lon], { radius: 3.5, color: css("--ink"), weight: 1, fillColor: "#fff", fillOpacity: 1 });
+      mk.bindTooltip(`${codesOf(s).map(chip).join("")}${esc(s.name)}`, { className: "st", direction: "top", offset: [0, -6] });
+      mk.on("click", () => focusStation(s.sid));
+      mk.sid = String(s.sid);
+      return mk;
+    })).addTo(map);
+
+    map.fitBounds(bandLayer.getBounds(), { padding: [20, 20] });
+    renderLines();
+    $("#k-stations").textContent = fmt(meta.stations.filter((s) => s.covered).length);
+    $("#k-km2").textContent = fmt(meta.total_km2);
+    $("#about-speed").textContent = meta.walk_speed_kmh;
+    $("#loading").hidden = true;
+    document.body.classList.add("ready");
+    applyFilters();
+  }
+
+  const selected = (s) => state.ops.has(s.operator) && codesOf(s).some((c) => state.lines.has(c));
+  const stationVisible = (s) => (s ? (state.focus ? String(s.sid) === state.focus : selected(s)) : false);
+
+  function applyFilters() {
+    const ink = css("--ink");
+    const shown = (f) => state.bands.has(f.properties.band) && stationVisible(stationsById.get(String(f.properties.sid)));
+    edgeLayer.eachLayer((layer) => layer.setStyle({ ...edgeStyle(), opacity: shown(layer.feature) ? 1 : 0 }));
+    bandLayer.eachLayer((layer) => layer.setStyle({ ...bandStyle(layer.feature), fillOpacity: shown(layer.feature) ? 1 : 0 }));
+    let i = 0;
+    lineLayer.eachLayer((pl) => {
+      const l = lineOf[i++];
+      const on = state.lines.has(l.line) && state.ops.has(l.operator);
+      pl.setStyle({ opacity: on ? (state.focus ? 0.35 : 0.9) : 0.12 });
+    });
+    stationLayer.eachLayer((mk) => {
+      const s = stationsById.get(mk.sid);
+      const on = !state.focus && selected(s);
+      const isFocus = state.focus === mk.sid;
+      mk.setStyle({ radius: isFocus ? 6 : 3.5, color: ink, fillColor: isFocus ? css("--focus") : "#fff", opacity: on || isFocus ? 1 : 0.15, fillOpacity: on || isFocus ? 1 : 0.15 });
+    });
+    $$(".line").forEach((btn) => btn.setAttribute("aria-pressed", state.lines.has(btn.dataset.line)));
+    summarize();
+  }
+
+  function summarize() {
+    const picked = meta.stations.filter(selected);
+    const km2 = picked.reduce((sum, s) => {
+      const k = km2ById.get(String(s.sid)) || {};
+      const widest = BANDS.filter((b) => state.bands.has(b) && k[b] != null).pop();
+      return widest ? sum + k[widest] : sum;
+    }, 0);
+    $("#sel-n").textContent = fmt(picked.length);
+    $("#sel-km2").textContent = fmt(km2);
+  }
+
+  function renderLines() {
+    const counts = meta.stations.reduce((acc, s) => {
+      codesOf(s).forEach((c) => { acc[c] = (acc[c] || 0) + 1; });
+      return acc;
+    }, {});
+    const groups = OPS.map((op) => [op, meta.lines.filter((l) => l.operator === op)]);
+    const rest = meta.lines.filter((l) => !OPS.includes(l.operator));
+    if (rest.length) groups[0][1].push(...rest);
+    const host = $("#lines");
+    host.innerHTML = "";
+    groups.forEach(([op, ls]) => {
+      if (!ls.length) return;
+      const h = document.createElement("div");
+      h.className = "group";
+      h.textContent = op;
+      host.appendChild(h);
+      ls.forEach((l) => {
+        const row = document.createElement("div");
+        row.className = "linerow";
+        const b = document.createElement("button");
+        b.className = "line";
+        b.type = "button";
+        b.dataset.line = l.line;
+        b.setAttribute("aria-pressed", "true");
+        const stops = Array.isArray(l.stations) ? l.stations : [];
+        const n = stops.length || counts[l.line] || 0;
+        b.innerHTML = `${chip(l.line)}<span class="name">${esc(l.name)}</span><span class="n">${n}<small>stops</small></span>`;
+        b.title = `${l.line} ${l.name} · click toggles, Ctrl-click isolates, double-click zooms`;
+        b.addEventListener("click", (ev) => {
+          clearFocus();
+          if (ev.altKey || ev.metaKey || ev.ctrlKey) state.lines = new Set([l.line]);
+          else if (state.lines.has(l.line)) state.lines.delete(l.line);
+          else state.lines.add(l.line);
+          applyFilters();
+        });
+        b.addEventListener("dblclick", () => { state.lines = new Set([l.line]); applyFilters(); zoomToLine(l); });
+        row.appendChild(b);
+        if (stops.length) {
+          const exp = document.createElement("button");
+          exp.className = "exp"; exp.type = "button"; exp.setAttribute("aria-expanded", "false");
+          exp.setAttribute("aria-label", `Show the ${stops.length} stops of ${l.line}`);
+          exp.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg>';
+          const ul = document.createElement("ul");
+          ul.className = "stops"; ul.hidden = true; ul.style.setProperty("--stop-color", lineColor(l.line));
+          stops.forEach((st) => {
+            const li = document.createElement("li");
+            const sb = document.createElement("button");
+            sb.className = "stop"; sb.type = "button"; sb.textContent = st.name;
+            if (st.sid == null) { sb.disabled = true; sb.title = "No OpenStreetMap node for this stop"; }
+            else sb.addEventListener("click", () => focusStation(st.sid));
+            li.appendChild(sb); ul.appendChild(li);
+          });
+          exp.addEventListener("click", () => { const open = ul.hidden; ul.hidden = !open; exp.setAttribute("aria-expanded", String(open)); });
+          row.appendChild(exp);
+          host.appendChild(row);
+          host.appendChild(ul);
+        } else {
+          host.appendChild(row);
+        }
+      });
+    });
+  }
+
+  const fitOpts = (max) => (isPhone()
+    ? { paddingTopLeft: [20, 120], paddingBottomRight: [20, 130], maxZoom: max }
+    : { paddingTopLeft: [404, 40], paddingBottomRight: [368, 90], maxZoom: max });
+
+  function zoomToLine(l) {
+    map.fitBounds(L.latLngBounds(l.coords.map(([x, y]) => [y, x])), fitOpts(17));
+  }
+
+  function fitFocus(s) {
+    const fs = bands.features.filter((f) => String(f.properties.sid) === String(s.sid));
+    if (fs.length) map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: fs }).getBounds(), fitOpts(15));
+    else map.setView([s.lat, s.lon], 14);
+  }
+
+  function focusStation(sid) {
+    const s = stationsById.get(String(sid));
+    if (!s) return;
+    state.focus = String(s.sid);
+    const k = km2ById.get(state.focus) || {};
+    const present = BANDS.filter((b) => k[b] != null);
+    $("#st-name").textContent = s.name;
+    $("#st-codes").innerHTML = codesOf(s).map(chip).join("");
+    $("#st-meta").innerHTML = codesOf(s).map((c) => `<div>${esc(lineName(c))}</div>`).join("") + `<div class="op">${esc(s.operator)}</div>`;
+    $("#st-hero").hidden = !present.length;
+    $("#st-none").hidden = !!present.length;
+    if (present.length) {
+      const widest = present[present.length - 1];
+      const max = k[widest] || 1;
+      $("#st-big").textContent = fmt(k[widest], 1);
+      $("#st-big-min").textContent = widest / 60;
+      $("#st-bars").innerHTML = present.map((b) =>
+        `<span class="lbl">${b / 60} min</span><span class="bar"><i style="width:${(100 * k[b] / max).toFixed(1)}%;background:var(${BAND_VAR[b]})"></i></span><span class="v">${fmt(k[b], 2)} km²</span>`
+      ).join("");
+    }
+    $("#station").hidden = false;
+    setSnap("peek");
+    applyFilters();
+    fitFocus(s);
+  }
+
+  function clearFocus() {
+    state.focus = null;
+    $("#station").hidden = true;
+  }
+  function closeStation() { clearFocus(); applyFilters(); }
+
+  $("#station .close").addEventListener("click", closeStation);
+  $("#st-show").addEventListener("click", () => { const s = stationsById.get(state.focus); if (s) fitFocus(s); });
+  $$("[data-band]").forEach((b) => b.addEventListener("click", () => {
+    const v = +b.dataset.band;
+    if (state.bands.has(v)) state.bands.delete(v); else state.bands.add(v);
+    b.setAttribute("aria-pressed", state.bands.has(v));
+    applyFilters();
+  }));
+  $$("[data-op]").forEach((b) => b.addEventListener("click", () => {
+    const v = b.dataset.op;
+    if (state.ops.has(v)) state.ops.delete(v); else state.ops.add(v);
+    b.setAttribute("aria-pressed", state.ops.has(v));
+    clearFocus();
+    applyFilters();
+  }));
+  $("#all").addEventListener("click", () => { state.lines = new Set(meta.lines.map((l) => l.line)); clearFocus(); applyFilters(); });
+  $("#none").addEventListener("click", () => { state.lines = new Set(); clearFocus(); applyFilters(); });
+
+  /* Bottom sheet (phone): peek, half and full snap heights; drag the handle or tap it to cycle */
+  const SNAPS = ["peek", "half", "full"];
+  const panel = $("#panel");
+  const handle = $("#sheet-toggle");
+  function setSnap(s) {
+    panel.dataset.snap = s;
+    panel.classList.toggle("collapsed", s === "peek");
+    handle.setAttribute("aria-expanded", String(s !== "peek"));
+  }
+  const snapHeights = () => {
+    const vh = window.innerHeight;
+    const top = 16 + 58 + (parseFloat(getComputedStyle(root).paddingTop) || 0);
+    return { peek: 96, half: vh * 0.52, full: vh - top };
+  };
+  let drag = null;
+  handle.addEventListener("pointerdown", (e) => {
+    if (!isPhone()) return;
+    drag = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false };
+    handle.setPointerCapture(e.pointerId);
+    panel.classList.add("dragging");
+  });
+  handle.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dy = e.clientY - drag.y;
+    if (Math.abs(dy) > 6) drag.moved = true;
+    const lim = snapHeights();
+    panel.style.height = `${Math.min(lim.full, Math.max(lim.peek, drag.h - dy))}px`;
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    const h = panel.getBoundingClientRect().height;
+    const moved = drag.moved;
+    drag = null;
+    panel.classList.remove("dragging");
+    panel.style.height = "";
+    if (!moved) return;
+    const lim = snapHeights();
+    const nearest = SNAPS.reduce((a, b) => (Math.abs(lim[b] - h) < Math.abs(lim[a] - h) ? b : a));
+    setSnap(nearest);
+  };
+  handle.addEventListener("pointerup", endDrag);
+  handle.addEventListener("pointercancel", endDrag);
+  handle.addEventListener("click", () => {
+    const i = SNAPS.indexOf(panel.dataset.snap);
+    setSnap(SNAPS[(i + 1) % SNAPS.length]);
+  });
+
+  /* Search with suggestions */
+  const norm = (t) => t.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ı/g, "i");
+  const search = $("#search");
+  const hits = $("#hits");
+  let hitList = [];
+  let active = -1;
+  function findStations(q) {
+    if (!q || !meta) return [];
+    const starts = meta.stations.filter((s) => norm(s.name).startsWith(q));
+    const within = meta.stations.filter((s) => !norm(s.name).startsWith(q) && norm(s.name).includes(q));
+    return starts.concat(within).slice(0, 7);
+  }
+  function renderHits() {
+    hits.innerHTML = hitList.map((s, i) =>
+      `<li role="option" id="hit-${i}" aria-selected="${i === active}" data-sid="${esc(s.sid)}">${codesOf(s).map(chip).join("")}<span class="nm">${esc(s.name)}</span></li>`
+    ).join("");
+    hits.hidden = !hitList.length;
+    search.setAttribute("aria-expanded", String(!!hitList.length));
+    search.setAttribute("aria-activedescendant", active >= 0 ? `hit-${active}` : "");
+  }
+  function closeHits() { hitList = []; active = -1; renderHits(); }
+  function pick(sid) {
+    const s = stationsById.get(String(sid));
+    closeHits();
+    if (!s) return;
+    search.value = s.name;
+    search.blur();
+    focusStation(s.sid);
+  }
+  search.addEventListener("input", () => {
+    hitList = findStations(norm(search.value.trim()));
+    active = hitList.length ? 0 : -1;
+    renderHits();
+  });
+  search.addEventListener("focus", () => setPop(null));
+  search.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (!hitList.length) return;
+      e.preventDefault();
+      active = (active + (e.key === "ArrowDown" ? 1 : hitList.length - 1)) % hitList.length;
+      renderHits();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const s = hitList[active] || findStations(norm(search.value.trim()))[0];
+      if (s) pick(s.sid);
+    } else if (e.key === "Escape") {
+      closeHits();
+      search.blur();
+    }
+  });
+  search.addEventListener("blur", closeHits);
+  hits.addEventListener("mousedown", (e) => {
+    const li = e.target.closest("li");
+    if (li) { e.preventDefault(); pick(li.dataset.sid); }
+  });
+
+  /* Popovers in the top bar: about, basemap. Only one is open at a time. */
+  const POPS = [
+    { box: $("#about"), btn: $("#about-btn") },
+    { box: $("#basemap"), btn: $("#base-btn") },
+  ];
+  function setPop(open) {
+    POPS.forEach((p) => {
+      const on = p === open;
+      p.box.hidden = !on;
+      p.btn.setAttribute("aria-expanded", String(on));
+    });
+  }
+  const openPop = () => POPS.find((p) => !p.box.hidden) || null;
+  POPS.forEach((p) => p.btn.addEventListener("click", () => setPop(p.box.hidden ? p : null)));
+  $("#about .close").addEventListener("click", () => { setPop(null); $("#about-btn").focus(); });
+  document.addEventListener("mousedown", (e) => {
+    const p = openPop();
+    if (p && !p.box.contains(e.target) && !p.btn.contains(e.target)) setPop(null);
+  });
+
+  /* Keyboard */
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if (e.key === "/" && !typing) { e.preventDefault(); search.focus(); search.select(); }
+    else if (e.key === "Escape" && !typing) {
+      if (openPop()) setPop(null);
+      else if (state.focus) closeStation();
+    }
+  });
+
+  /* Attribution sits above the bottom sheet on phones */
+  const placeAttribution = () => map.attributionControl.setPosition(isPhone() ? "topright" : "bottomright");
+  placeAttribution();
+  phoneMq.addEventListener?.("change", placeAttribution);
+
+  /* Theme changes restyle canvas layers and swap the automatic basemap */
+  const restyle = () => {
+    syncThemeButton();
+    applyBase();
+    if (!bandLayer) return;
+    landLayer.setStyle(landStyle());
+    applyFilters();
+  };
+  mq.addEventListener?.("change", restyle);
+  new MutationObserver(restyle).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>

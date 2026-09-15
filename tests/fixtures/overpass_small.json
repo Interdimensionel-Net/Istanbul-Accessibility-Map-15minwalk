@@ -1,0 +1,115 @@
+{
+ "elements": [
+  {
+   "type": "node",
+   "id": 1,
+   "lat": 41.037,
+   "lon": 28.985,
+   "tags": {
+    "railway": "station",
+    "station": "subway",
+    "name": "Taksim",
+    "line": "M2",
+    "operator": "Metro İstanbul"
+   }
+  },
+  {
+   "type": "node",
+   "id": 2,
+   "lat": 41.0372,
+   "lon": 28.9855,
+   "tags": {
+    "railway": "subway_entrance",
+    "name": "Taksim Giriş 1"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3,
+   "lat": 41.0368,
+   "lon": 28.9845,
+   "tags": {
+    "railway": "subway_entrance"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4,
+   "lat": 41.005,
+   "lon": 28.95,
+   "tags": {
+    "railway": "station",
+    "train": "yes",
+    "name": "Yenikapı",
+    "network": "Marmaray"
+   }
+  },
+  {
+   "type": "node",
+   "id": 5,
+   "lat": 41.03,
+   "lon": 28.98,
+   "tags": {
+    "railway": "tram_stop",
+    "name": "Kabataş",
+    "line": "T1"
+   }
+  },
+  {
+   "type": "node",
+   "id": 6,
+   "lat": 41.04,
+   "lon": 29.0,
+   "tags": {
+    "railway": "station",
+    "station": "funicular",
+    "name": "Fun Stop"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7,
+   "lat": 40.9,
+   "lon": 29.2,
+   "tags": {
+    "railway": "subway_entrance",
+    "name": "Orphan entrance"
+   }
+  },
+  {
+   "type": "node",
+   "id": 8,
+   "lat": 41.01,
+   "lon": 28.97,
+   "tags": {
+    "railway": "station",
+    "name": "No mode station"
+   }
+  },
+  {
+   "type": "node",
+   "id": 20,
+   "lat": 41.06,
+   "lon": 28.99,
+   "tags": {
+    "highway": "bus_stop",
+    "public_transport": "platform",
+    "bus": "yes",
+    "network": "Metrobus",
+    "name": "Zincirlikuyu"
+   }
+  },
+  {
+   "type": "node",
+   "id": 21,
+   "lat": 41.0601,
+   "lon": 28.9902,
+   "tags": {
+    "public_transport": "stop_position",
+    "bus": "yes",
+    "network": "Metrobus (Istanbul)",
+    "name": "Zincirlikuyu"
+   }
+  }
+ ]
+}

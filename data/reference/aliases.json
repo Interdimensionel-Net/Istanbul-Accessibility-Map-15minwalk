@@ -1,0 +1,22 @@
+{
+  "osm_name_to_reference": {
+    "Vadi İstanbul": "Vadistanbul",
+    "Sanayi": "Sanayi Mahallesi",
+    "Pierre Loti Teleferik İstasyonu": "Piyer Loti",
+    "Eyüp Teleferik İstasyonu": "Eyüpsultan",
+    "Cihangir - Üniv.mah.": "Cihangir-Üniversite Mahallesi",
+    "Avcılar": "Avcılar Merkez-Üniversite Kampüsü",
+    "Bayrampaşa - Maltepe / Koç Üniversitesi Hastanesi": "Bayrampaşa-Maltepe",
+    "Okmeydanı Hastane Metrobüs durağı": "Okmeydanı Hastane",
+    "Mustafa Kemalpaşa": "Mustafa Kemal Paşa",
+    "Fındıklı - MSÜ": "Fındıklı-Mimar Sinan Üniversitesi",
+    "Kadıköy - İDO- Metro": "Kadıköy-İDO",
+    "GTÜ-Fatih": "Gebze Teknik Üniversitesi-Fatih",
+    "Metrokent": "Başakşehir-Metrokent",
+    "Moda Caddesi": "Moda",
+    "Laleli-Üniversite": "Laleli-İstanbul Üniversitesi"
+  },
+  "osm_id_to_reference": {
+    "7726686093": "Göztepe Mahallesi"
+  }
+}

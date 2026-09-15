@@ -1,0 +1,28 @@
+# Environment and tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.env
+
+# Downloaded and derived data. OSM-derived files are ODbL and are rebuilt by
+# `uv run python scripts/run.py`; they are not committed.
+data/cache/
+output/
+artifact/data/
+cache/
+*.graphml
+
+# The official Metro İstanbul map PDF is all rights reserved. Never commit it.
+*.pdf
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Keep: data/reference/ (small, attributed), uv.lock, LICENSE
