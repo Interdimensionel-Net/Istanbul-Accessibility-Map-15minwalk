@@ -8,7 +8,10 @@ import { mapTokens } from "./theme.js";
 const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>';
 const ESRI_ATTR = 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
 
+const EOX_ATTR = '<a href="https://s2maps.eu" target="_blank" rel="noopener">Sentinel-2 cloudless</a> by <a href="https://eox.at" target="_blank" rel="noopener">EOX</a> (Contains modified Copernicus Sentinel data 2024), CC BY-NC-SA';
+
 export const BASEMAPS = Object.freeze([
+  { id: "sentinel", name: "Satellite (Sentinel-2)", sub: "EOX cloudless 2024, 10 m", url: "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", maxZoom: 17, attr: EOX_ATTR },
   { id: "osm", name: "OpenStreetMap", sub: "Darkened on dark themes", url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", maxZoom: 19, attr: OSM_ATTR, filter: true },
   { id: "satellite", name: "Satellite", sub: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", maxZoom: 18, attr: ESRI_ATTR },
   { id: "topo", name: "OpenTopoMap", sub: "Terrain and contours", url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", subdomains: "abc", maxZoom: 17, attr: OSM_ATTR + ", SRTM; style &copy; OpenTopoMap (CC-BY-SA)", filter: true },

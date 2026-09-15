@@ -152,7 +152,7 @@ Content-Security-Policy allows scripts from this origin only.
 | `WALKSHED_WEB_TRUST_FORWARDED_FOR` | `false` | Trust `X-Forwarded-For` and `X-Forwarded-Proto` for rate limiting and HSTS. Enable only behind a proxy you control. |
 | `WALKSHED_WEB_ENABLE_DOCS` | `false` | Expose `/docs` and `/openapi.json`. |
 | `WALKSHED_WEB_EXPOSE_PROVENANCE` | `false` | Include package versions and config in `/api/meta`. |
-| `WALKSHED_WEB_TILE_HOSTS` | OSM, OpenTopoMap, Esri | JSON list of tile origins allowed in `img-src`. |
+| `WALKSHED_WEB_TILE_HOSTS` | OSM, OpenTopoMap, Esri, EOX | JSON list of tile origins allowed in `img-src`. |
 | `WALKSHED_WEB_LOG_LEVEL` | `INFO` | Structured JSON logs. Query strings and client addresses are never logged. |
 
 Every `/api/*` response is `{success, data, error, meta}`. `/data/{name}` returns

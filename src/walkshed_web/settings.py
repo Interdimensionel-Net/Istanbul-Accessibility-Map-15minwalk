@@ -16,6 +16,7 @@ DEFAULT_TILE_HOSTS: tuple[str, ...] = (
     "https://tile.openstreetmap.org",
     "https://*.tile.opentopomap.org",
     "https://server.arcgisonline.com",
+    "https://tiles.maps.eox.at",
 )
 TILE_HOST = re.compile(r"^https://[A-Za-z0-9.*-]+$")
 
