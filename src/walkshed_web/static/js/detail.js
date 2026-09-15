@@ -5,7 +5,7 @@ import { showError } from "./toast.js";
 
 const GOOGLE_MAPS = "https://www.google.com/maps/search/?api=1&query=";
 
-export function createDetail({ onClose, onShow }) {
+export function createDetail({ onClose }) {
   const panel = $("#station");
   let current = null;
 
@@ -51,7 +51,6 @@ export function createDetail({ onClose, onShow }) {
     close();
     onClose();
   });
-  $("#st-show").addEventListener("click", () => current && onShow(current));
 
   return Object.freeze({ open, close, current: () => current, isOpen: () => !panel.hidden });
 }

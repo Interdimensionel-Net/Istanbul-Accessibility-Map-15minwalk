@@ -100,7 +100,6 @@ const detail = createDetail({
     if (detailRelease) detailRelease();
     detailRelease = null;
   },
-  onShow: (s) => view.fitStation(s, isPhone()),
 });
 async function focusStation(sid) {
   const s = await detail.open(sid);
