@@ -13,7 +13,7 @@ import geopandas as gpd
 import networkx as nx
 import osmnx as ox
 
-from walkshed.config import Config
+from walkshed.config import PROJECT_ROOT, Config
 from walkshed.contracts import ENTRANCES, ISOCHRONES, ORIGINS, STATIONS, require_columns
 from walkshed.coverage import dissolve_coverage, summarize
 from walkshed.export import resolve_lines, write_artifact_data
@@ -113,11 +113,20 @@ def provenance(cfg: Config, refresh: bool, overpass_cached: bool, graph_cached: 
         "refresh": refresh,
         "python": platform.python_version(),
         "packages": {p: version(p) for p in PACKAGES},
-        "config": {
-            k: str(v) if not isinstance(v, (int, float, bool, str, tuple)) else v
-            for k, v in asdict(cfg).items()
-        },
+        "config": {k: _public_value(v) for k, v in asdict(cfg).items()},
     }
+
+
+def _public_value(value: object) -> object:
+    """Config values as published: paths relative to the project, never the machine's layout."""
+    if isinstance(value, Path):
+        try:
+            return value.relative_to(PROJECT_ROOT).as_posix()
+        except ValueError:
+            return value.name
+    if isinstance(value, int | float | bool | str | tuple):
+        return value
+    return str(value)
 
 
 def run(cfg: Config, refresh: bool = False) -> dict:

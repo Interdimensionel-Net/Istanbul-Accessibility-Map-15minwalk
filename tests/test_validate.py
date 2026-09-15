@@ -22,3 +22,14 @@ def test_compare_reports_missing():
     assert strict["missing_in_osm"] == ["Osmanbey", "Ghost"]
     assert loose["matched"] == 2
     assert loose["missing_in_osm"] == ["Ghost"]
+
+
+def test_provenance_has_no_absolute_paths():
+    from walkshed.config import Config
+    from walkshed.pipeline import provenance
+
+    config = provenance(Config(), False, False, False)["config"]
+    for key, value in config.items():
+        if isinstance(value, str):
+            assert ":\\" not in value and not value.startswith("/"), (key, value)
+    assert config["cache_dir"] == "data/cache"
