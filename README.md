@@ -152,7 +152,7 @@ Content-Security-Policy allows scripts from this origin only.
 | `WALKSHED_WEB_TRUST_FORWARDED_FOR` | `false` | Trust `X-Forwarded-For` and `X-Forwarded-Proto` for rate limiting and HSTS. Enable only behind a proxy you control. |
 | `WALKSHED_WEB_ENABLE_DOCS` | `false` | Expose `/docs` and `/openapi.json`. |
 | `WALKSHED_WEB_EXPOSE_PROVENANCE` | `false` | Include package versions and config in `/api/meta`. |
-| `WALKSHED_WEB_TILE_HOSTS` | OSM, OpenTopoMap, Esri, EOX | JSON list of tile origins allowed in `img-src`. |
+| `WALKSHED_WEB_TILE_HOSTS` | OSM, OpenTopoMap, Esri | JSON list of tile origins allowed in `img-src`. |
 | `WALKSHED_WEB_LOG_LEVEL` | `INFO` | Structured JSON logs. Query strings and client addresses are never logged. |
 
 Every `/api/*` response is `{success, data, error, meta}`. `/data/{name}` returns
@@ -179,8 +179,6 @@ via Nominatim (ODbL).
 
 Basemaps on the web map: OpenStreetMap tiles (ODbL, © OpenStreetMap contributors),
 OpenTopoMap (CC BY-SA), Esri World Imagery (Tiles © Esri — Source: Esri, Maxar,
-Earthstar Geographics, and the GIS User Community; free use with attribution), and
-Sentinel-2 cloudless by [EOX IT Services](https://s2maps.eu) (CC BY-NC-SA 4.0,
-contains modified Copernicus Sentinel data 2024; non-commercial use only). The map
+Earthstar Geographics, and the GIS User Community; free use with attribution). The map
 library is [Leaflet](https://leafletjs.com) 1.9.4 (BSD-2-Clause), vendored under
 `src/walkshed_web/static/vendor/leaflet/`.
