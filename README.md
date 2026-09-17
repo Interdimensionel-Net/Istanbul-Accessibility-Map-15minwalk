@@ -5,7 +5,7 @@ station: metro, Marmaray, suburban rail, tram, funicular, cable car, and the
 Metrobüs BRT. Routing runs on the OpenStreetMap pedestrian network with osmnx.
 No API key is needed.
 
-**Live map:** https://interdimensionel-net.github.io/Istanbul-Accessibility-Map-15minwalk/ — no install, no key. Pick lines, search a station, switch between OpenStreetMap, satellite and terrain basemaps.
+**Live map:** https://interdimensionel-net.github.io/Istanbul-Accessibility-Map-15minwalk/ — no install, no key. Pick lines, search a station, switch between OpenStreetMap, satellite and terrain basemaps. On a phone the map fills the screen; the menu button opens the line list and settings as a drawer.
 
 Operators are kept apart: Metro İstanbul (İBB), TCDD Taşımacılık (Marmaray B1,
 B2, M11, T6), and İETT (Metrobüs, T2, F2).

@@ -939,7 +939,8 @@ svg { display: block; }
   overflow: hidden;
 }
 #panel header { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); position: relative; flex: none; }
-#sheet-toggle { display: none; }
+/* Phone-only chrome: hamburger, drawer close, status pill, sheet grips, scrim */
+#menu-btn, #drawer-close, #pill, .grip, #scrim, #drawer-foot { display: none; }
 .ttl { display: flex; align-items: center; gap: 12px; }
 .mark {
   width: 40px; height: 40px; flex: none; border-radius: 12px;
@@ -1111,9 +1112,6 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 .rt-bars .bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rt-color, var(--accent)); }
 .rt-bars .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-2); }
 .rt-bars .nm.none { opacity: 0.45; }
-@media (max-width: 640px) {
-  #route { top: auto; right: 0; left: 0; width: auto; max-width: none; z-index: 1100; bottom: 0; max-height: 78%; border-radius: 22px 22px 0 0; border-bottom: 0; padding: 16px 20px calc(18px + env(safe-area-inset-bottom, 0px)); }
-}
 
 /* Loading */
 #loading {
@@ -1125,51 +1123,71 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 #loading .p i { display: block; width: 40%; height: 100%; background: var(--accent); border-radius: 2px; }
 #loading .s { font-size: 13px; font-weight: 500; }
 
-/* Phone: bottom sheets with snap heights */
+/* Phone: left drawer, status pill, low bottom sheets */
 @media (max-width: 640px) {
   #bar { width: auto; right: 16px; }
-  #stats {
-    top: calc(16px + env(safe-area-inset-top, 0px) + 58px); bottom: auto;
-    padding: 6px 12px; gap: 10px; border-radius: 12px;
+  #menu-btn { display: grid; }
+  #base-btn, #theme, #about-btn { display: none; }
+  .ib, .close, .play, .exp, .txt, #base-list button, .seg button { min-width: 44px; min-height: 44px; }
+  .search input { height: 44px; }
+  .linerow { grid-template-columns: 1fr 44px 44px; }
+  .linerow.noexp { grid-template-columns: 1fr 44px; }
+  .line { padding: 10px 8px; }
+  .stop { padding: 9px 8px; }
+  .leaflet-top.leaflet-right .leaflet-control-attribution { margin: calc(16px + env(safe-area-inset-top, 0px) + 60px) 16px 0 0 !important; max-width: 50vw; }
+  .leaflet-control-zoom { display: none; }
+
+  #stats { display: none; }
+  #pill {
+    display: flex; align-items: center; gap: 4px;
+    left: 16px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    height: 44px; padding: 0 14px; border-radius: 22px;
+    font: 600 13px/1 var(--font); color: var(--ink); cursor: pointer;
   }
-  .stat .v { font-size: 14px; }
-  .stat .l { font-size: 10px; }
-  .sep { height: 20px; }
-  .leaflet-top.leaflet-right .leaflet-control-attribution { margin: calc(16px + env(safe-area-inset-top, 0px) + 58px) 16px 0 0 !important; max-width: 50vw; }
+  #pill b { font-weight: 800; }
+  #pill span { color: var(--ink-3); margin-left: 4px; font-size: 16px; }
+
+  #scrim { display: block; position: fixed; inset: 0; z-index: 1250; background: rgba(0, 0, 0, 0.45); cursor: pointer; }
   #panel {
-    top: auto; left: 0; right: 0; width: auto; max-width: none;
-    bottom: 0;
-    height: 52%;
-    max-height: none;
-    border-radius: 22px 22px 0 0;
-    border-bottom: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    position: fixed; top: 0; bottom: 0; left: 0; right: auto;
+    width: min(86vw, 360px); height: 100%; height: 100dvh; max-height: none;
+    border-radius: 0 var(--r-lg) var(--r-lg) 0; border-left: 0; z-index: 1300;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+    overflow-y: auto; overscroll-behavior: contain;
+    transform: translateX(-104%);
   }
-  #panel[data-snap="peek"] { height: calc(96px + env(safe-area-inset-bottom, 0px)); }
-  #panel[data-snap="full"] { height: calc(100% - 16px - 58px - env(safe-area-inset-top, 0px)); }
-  #panel.dragging { transition: none !important; }
-  #panel header { padding: 6px 18px 12px; }
-  #sheet-toggle {
-    display: block; width: 100%; height: 22px; margin: 0; padding: 0;
-    border: 0; background: transparent; cursor: grab; touch-action: none;
-  }
-  #sheet-toggle i { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto; }
+  #panel[data-open="true"] { transform: none; }
+  #panel header { padding: 14px 52px 12px 18px; }
+  #drawer-close { display: grid; top: calc(12px + env(safe-area-inset-top, 0px)); }
+  #panel header { position: sticky; top: 0; z-index: 2; background: var(--surface-solid); }
+  #panel-body { flex: none; }
+  #lines { overflow: visible; }
   .mark { width: 34px; height: 34px; border-radius: 10px; }
   .mark svg { width: 19px; height: 19px; }
   h1 { font-size: 16px; }
   .sub { font-size: 12px; }
-  #station {
-    top: auto; right: 0; left: 0; width: auto; max-width: none; z-index: 1100;
-    bottom: 0;
-    max-height: 64%;
-    border-radius: 22px 22px 0 0;
-    border-bottom: 0;
-    padding: 16px 20px calc(18px + env(safe-area-inset-bottom, 0px));
+  #drawer-foot { display: block; flex: none; border-top: 1px solid var(--line); padding: 6px 0 4px; }
+  #drawer-foot .pop { position: static; border: 0; box-shadow: none; background: transparent; animation: none; }
+  #drawer-foot #theme { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0 16px; border-radius: 0; font: 600 13px var(--font); color: var(--ink); }
+  #drawer-foot #theme[data-mode="light"]::after { content: "Dark theme"; }
+  #drawer-foot #theme[data-mode="dark"]::after { content: "Light theme"; }
+  #drawer-foot #about .close { display: none; }
+  #drawer-foot #about { font-size: 12px; }
+
+  #station, #route {
+    top: auto; right: 0; left: 0; bottom: 0; width: auto; max-width: none; z-index: 1100;
+    height: 40%; height: 40dvh; max-height: none;
+    border-radius: 22px 22px 0 0; border-bottom: 0;
+    padding: 0 20px calc(18px + env(safe-area-inset-bottom, 0px));
   }
-  #station::before, #route::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: -4px auto 12px; }
-  .rt-bars { max-height: 30vh; }
+  #route { height: 48%; height: 48dvh; }
+  #station[data-snap="full"], #route[data-snap="full"] { height: 88%; height: 88dvh; }
+  #station.dragging, #route.dragging { transition: none !important; }
+  .grip { display: block; position: sticky; top: 0; z-index: 1; width: 100%; height: 44px; margin: 0; padding: 0; border: 0; background: var(--surface); touch-action: none; cursor: grab; }
+  .grip i { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto; }
+  #station .close, #route .close { top: 8px; z-index: 2; }
+  .rt-bars { max-height: none; overflow: visible; }
   .rt-grid .v { font-size: 17px; }
-  .leaflet-control-zoom { display: none; }
 }
 
 /* Motion */
@@ -1177,10 +1195,12 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   .ib, .line, .txt, .stop, .exp, .seg button, .btn, .close, #base-list button, .leaflet-bar a { transition: background-color 140ms ease, color 140ms ease, opacity 180ms ease, box-shadow 140ms ease; }
   #station:not([hidden]) { animation: rise 280ms cubic-bezier(0.2, 0.7, 0.2, 1); }
   .pop { animation: fade 140ms ease; }
-  #panel { transition: height 280ms cubic-bezier(0.2, 0.7, 0.2, 1); }
-  body.ready #bar, body.ready #panel, body.ready #stats { animation: rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  #panel { transition: transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  #station, #route { transition: height 260ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  body.ready #bar, body.ready #panel, body.ready #stats, body.ready #pill { animation: rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
   body.ready #panel { animation-delay: 60ms; }
-  body.ready #stats { animation-delay: 120ms; }
+  body.ready #stats, body.ready #pill { animation-delay: 120ms; }
+  @media (max-width: 640px) { body.ready #panel { animation: none; } }
   #loading .p i { animation: load 1.2s ease-in-out infinite; }
   .bars .bar i { transition: width 320ms ease; }
 }
@@ -1197,6 +1217,9 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 </div>
 
 <div id="bar" class="float">
+  <button class="ib" id="menu-btn" type="button" aria-label="Open the menu" aria-controls="panel" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
   <div class="search">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <input type="search" id="search" placeholder="Find a station" autocomplete="off" aria-label="Find a station" role="combobox" aria-expanded="false" aria-controls="hits" aria-autocomplete="list">
@@ -1229,9 +1252,10 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   </div>
 </div>
 
-<aside id="panel" class="float" data-snap="half">
+<div id="scrim" hidden></div>
+<aside id="panel" class="float">
   <header>
-    <button id="sheet-toggle" type="button" aria-expanded="true" aria-controls="panel-body" aria-label="Show or hide filters"><i></i></button>
+    <button class="close" id="drawer-close" type="button" aria-label="Close the menu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
     <div class="ttl">
       <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
       <div>
@@ -1256,6 +1280,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     </div>
     <div id="lines" aria-label="Lines"></div>
   </div>
+  <div id="drawer-foot"></div>
 </aside>
 
 <div id="stats" class="float" aria-live="polite">
@@ -1263,8 +1288,10 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   <span class="sep" aria-hidden="true"></span>
   <div class="stat"><span class="v num" id="k-km2">–</span><span class="l">km² in 15 min</span></div>
 </div>
+<button id="pill" class="float" type="button" title="Open the menu" aria-controls="panel" aria-expanded="false"><b class="num" id="p-stations">–</b>&nbsp;stations · <b class="num" id="p-km2">–</b>&nbsp;km²<span aria-hidden="true">›</span></button>
 
 <aside id="station" class="float" hidden aria-labelledby="st-name">
+  <button class="grip" id="st-grip" type="button" aria-label="Resize the station sheet" aria-expanded="false"><i></i></button>
   <button class="close" type="button" aria-label="Close station"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
   <div class="eyebrow"><i aria-hidden="true"></i>Station</div>
   <h2 id="st-name">–</h2>
@@ -1286,6 +1313,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 </aside>
 
 <aside id="route" class="float" hidden aria-labelledby="rt-name">
+  <button class="grip" id="rt-grip" type="button" aria-label="Resize the route sheet" aria-expanded="false"><i></i></button>
   <button class="close" type="button" aria-label="Close route"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
   <div class="eyebrow"><i aria-hidden="true"></i>Route</div>
   <h2 id="rt-name">–</h2>
@@ -1467,13 +1495,25 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 
     map.fitBounds(bandLayer.getBounds(), { padding: [20, 20] });
     renderLines();
-    $("#k-stations").textContent = fmt(meta.stations.filter((s) => s.covered).length);
+    const covered = fmt(meta.stations.filter((s) => s.covered).length);
+    $("#k-stations").textContent = covered;
+    $("#p-stations").textContent = covered;
     $("#k-km2").textContent = fmt(meta.total_km2);
+    $("#p-km2").textContent = fmt(meta.total_km2);
     $("#about-speed").textContent = meta.walk_speed_kmh;
     $("#loading").hidden = true;
     document.body.classList.add("ready");
     applyFilters();
+    openFromHash();
   }
+
+  function openFromHash() {
+    const [key, value] = decodeURIComponent(location.hash.slice(1)).split("/");
+    if (key === "menu") openDrawer();
+    else if (key === "station" && stationsById.has(value)) focusStation(value);
+    else if (key === "route" && value) { const l = meta.lines.find((x) => x.line === value); if (l) openRoute(l); }
+  }
+  window.addEventListener("hashchange", () => { if (meta) openFromHash(); });
 
   const selected = (s) => state.ops.has(s.operator) && codesOf(s).some((c) => state.lines.has(c));
   const stationVisible = (s) => (s ? (state.focus ? String(s.sid) === state.focus : selected(s)) : false);
@@ -1582,12 +1622,13 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     });
   }
 
-  const fitOpts = (max) => (isPhone()
-    ? { paddingTopLeft: [20, 120], paddingBottomRight: [20, 130], maxZoom: max }
+  // frac: share of the viewport the bottom sheet covers on phones, so the fit stays above it
+  const fitOpts = (max, frac) => (isPhone()
+    ? { paddingTopLeft: [20, 76], paddingBottomRight: [20, Math.round(window.innerHeight * frac) + 16], maxZoom: max }
     : { paddingTopLeft: [404, 40], paddingBottomRight: [368, 90], maxZoom: max });
 
   function zoomToLine(l) {
-    map.fitBounds(L.latLngBounds(l.coords.map(([x, y]) => [y, x])), fitOpts(17));
+    map.fitBounds(L.latLngBounds(l.coords.map(([x, y]) => [y, x])), fitOpts(17, ROUTE_SNAPS.peek));
   }
 
   /* Route panel: isolate the line, then reveal each stop's walkshed in order while the numbers count up */
@@ -1622,7 +1663,8 @@ a.btn { text-decoration: none; color: var(--on-ink); }
       `<span class="nm${sids[i] ? "" : " none"}" title="${esc(s.name)}">${esc(s.name)}</span><span class="bar"><i data-i="${i}"></i></span><span class="v">${sids[i] ? fmt(perStop[i], 2) : "–"}</span>`
     ).join("");
     routeBox.hidden = false;
-    setSnap("peek");
+    closeDrawer();
+    routeSheet.set("peek");
     playRoute(sids, perStop, total, max);
   }
   function playRoute(sids, perStop, total, max) {
@@ -1670,7 +1712,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 
   function fitFocus(s) {
     const fs = bands.features.filter((f) => String(f.properties.sid) === String(s.sid));
-    if (fs.length) map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: fs }).getBounds(), fitOpts(15));
+    if (fs.length) map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: fs }).getBounds(), fitOpts(15, STATION_SNAPS.peek));
     else map.setView([s.lat, s.lon], 14);
   }
 
@@ -1698,7 +1740,8 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     }
     $("#st-gmaps").href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${s.lat},${s.lon}`);
     $("#station").hidden = false;
-    setSnap("peek");
+    closeDrawer();
+    stationSheet.set("peek");
     applyFilters();
     fitFocus(s);
   }
@@ -1726,52 +1769,103 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   $("#all").addEventListener("click", () => { state.lines = new Set(meta.lines.map((l) => l.line)); clearFocus(); applyFilters(); });
   $("#none").addEventListener("click", () => { state.lines = new Set(); clearFocus(); applyFilters(); });
 
-  /* Bottom sheet (phone): peek, half and full snap heights; drag the handle or tap it to cycle */
-  const SNAPS = ["peek", "half", "full"];
-  const panel = $("#panel");
-  const handle = $("#sheet-toggle");
-  function setSnap(s) {
-    panel.dataset.snap = s;
-    panel.classList.toggle("collapsed", s === "peek");
-    handle.setAttribute("aria-expanded", String(s !== "peek"));
+  /* Bottom sheets (phone): a grip at the top drags between the peek and full heights, a tap cycles them */
+  const STATION_SNAPS = { peek: 0.4, full: 0.88 };
+  const ROUTE_SNAPS = { peek: 0.48, full: 0.88 };
+  function makeSheet(el, grip, snaps) {
+    const names = Object.keys(snaps);
+    const heights = () => Object.fromEntries(names.map((n) => [n, window.innerHeight * snaps[n]]));
+    const set = (name) => {
+      el.dataset.snap = name;
+      grip.setAttribute("aria-expanded", String(name === "full"));
+    };
+    const get = () => el.dataset.snap || names[0];
+    let drag = null;
+    let justDragged = false;
+    grip.addEventListener("pointerdown", (e) => {
+      if (!isPhone()) return;
+      drag = { y: e.clientY, h: el.getBoundingClientRect().height, moved: false };
+      grip.setPointerCapture(e.pointerId);
+      el.classList.add("dragging");
+    });
+    grip.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const dy = e.clientY - drag.y;
+      if (Math.abs(dy) > 6) drag.moved = true;
+      const lim = heights();
+      el.style.height = `${Math.min(lim.full, Math.max(lim.peek, drag.h - dy))}px`;
+    });
+    const endDrag = () => {
+      if (!drag) return;
+      const h = el.getBoundingClientRect().height;
+      const moved = drag.moved;
+      drag = null;
+      el.classList.remove("dragging");
+      el.style.height = "";
+      if (!moved) return;
+      justDragged = true;
+      setTimeout(() => { justDragged = false; }, 0);
+      const lim = heights();
+      set(names.reduce((a, b) => (Math.abs(lim[b] - h) < Math.abs(lim[a] - h) ? b : a)));
+    };
+    grip.addEventListener("pointerup", endDrag);
+    grip.addEventListener("pointercancel", endDrag);
+    grip.addEventListener("click", () => { if (!justDragged) set(get() === "full" ? "peek" : "full"); });
+    set(names[0]);
+    return Object.freeze({ set, get });
   }
-  const snapHeights = () => {
-    const vh = window.innerHeight;
-    const top = 16 + 58 + (parseFloat(getComputedStyle(root).paddingTop) || 0);
-    return { peek: 96, half: vh * 0.52, full: vh - top };
-  };
-  let drag = null;
-  handle.addEventListener("pointerdown", (e) => {
-    if (!isPhone()) return;
-    drag = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false };
-    handle.setPointerCapture(e.pointerId);
-    panel.classList.add("dragging");
-  });
-  handle.addEventListener("pointermove", (e) => {
-    if (!drag) return;
-    const dy = e.clientY - drag.y;
-    if (Math.abs(dy) > 6) drag.moved = true;
-    const lim = snapHeights();
-    panel.style.height = `${Math.min(lim.full, Math.max(lim.peek, drag.h - dy))}px`;
-  });
-  const endDrag = () => {
-    if (!drag) return;
-    const h = panel.getBoundingClientRect().height;
-    const moved = drag.moved;
-    drag = null;
-    panel.classList.remove("dragging");
-    panel.style.height = "";
-    if (!moved) return;
-    const lim = snapHeights();
-    const nearest = SNAPS.reduce((a, b) => (Math.abs(lim[b] - h) < Math.abs(lim[a] - h) ? b : a));
-    setSnap(nearest);
-  };
-  handle.addEventListener("pointerup", endDrag);
-  handle.addEventListener("pointercancel", endDrag);
-  handle.addEventListener("click", () => {
-    const i = SNAPS.indexOf(panel.dataset.snap);
-    setSnap(SNAPS[(i + 1) % SNAPS.length]);
-  });
+  const stationSheet = makeSheet($("#station"), $("#st-grip"), STATION_SNAPS);
+  const routeSheet = makeSheet(routeBox, $("#rt-grip"), ROUTE_SNAPS);
+
+  /* Drawer (phone): the sidebar slides in from the left over a scrim */
+  const drawer = $("#panel");
+  const scrim = $("#scrim");
+  const bar = $("#bar");
+  const menuBtn = $("#menu-btn");
+  const pill = $("#pill");
+  const isDrawerOpen = () => drawer.dataset.open === "true";
+  const behindDrawer = () => [$("#map"), bar, $("#stats"), pill, $("#station"), routeBox];
+  function openDrawer() {
+    if (!isPhone() || isDrawerOpen()) return;
+    drawer.dataset.open = "true";
+    drawer.setAttribute("role", "dialog");
+    drawer.setAttribute("aria-modal", "true");
+    scrim.hidden = false;
+    behindDrawer().forEach((el) => { el.inert = true; });
+    [menuBtn, pill].forEach((b) => b.setAttribute("aria-expanded", "true"));
+    $("#drawer-close").focus();
+  }
+  function closeDrawer() {
+    if (!isDrawerOpen()) return;
+    delete drawer.dataset.open;
+    drawer.removeAttribute("role");
+    drawer.removeAttribute("aria-modal");
+    scrim.hidden = true;
+    behindDrawer().forEach((el) => { el.inert = false; });
+    [menuBtn, pill].forEach((b) => b.setAttribute("aria-expanded", "false"));
+    if (drawer.contains(document.activeElement)) menuBtn.focus();
+  }
+  menuBtn.addEventListener("click", openDrawer);
+  pill.addEventListener("click", openDrawer);
+  scrim.addEventListener("click", closeDrawer);
+  $("#drawer-close").addEventListener("click", closeDrawer);
+
+  /* On phones the basemap list, the theme switch and the about text live in the drawer footer */
+  const foot = $("#drawer-foot");
+  function placeChrome() {
+    const theme = $("#theme");
+    const boxes = [$("#basemap"), $("#about")];
+    if (isPhone()) {
+      foot.append(theme, ...boxes);
+      boxes.forEach((b) => { b.hidden = false; });
+    } else {
+      closeDrawer();
+      bar.insertBefore(theme, $("#about-btn"));
+      bar.append(...boxes);
+      boxes.forEach((b) => { b.hidden = true; });
+    }
+  }
+  placeChrome();
 
   /* Search with suggestions */
   const norm = (t) => t.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ı/g, "i");
@@ -1835,13 +1929,14 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     { box: $("#basemap"), btn: $("#base-btn") },
   ];
   function setPop(open) {
+    if (isPhone()) return; // the popover contents sit in the drawer, always shown
     POPS.forEach((p) => {
       const on = p === open;
       p.box.hidden = !on;
       p.btn.setAttribute("aria-expanded", String(on));
     });
   }
-  const openPop = () => POPS.find((p) => !p.box.hidden) || null;
+  const openPop = () => (isPhone() ? null : POPS.find((p) => !p.box.hidden) || null);
   POPS.forEach((p) => p.btn.addEventListener("click", () => setPop(p.box.hidden ? p : null)));
   $("#about .close").addEventListener("click", () => { setPop(null); $("#about-btn").focus(); });
   document.addEventListener("mousedown", (e) => {
@@ -1854,7 +1949,8 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
     if (e.key === "/" && !typing) { e.preventDefault(); search.focus(); search.select(); }
     else if (e.key === "Escape" && !typing) {
-      if (openPop()) setPop(null);
+      if (isDrawerOpen()) closeDrawer();
+      else if (openPop()) setPop(null);
       else if (!routeBox.hidden) closeRoute();
       else if (state.focus) closeStation();
     }
@@ -1863,7 +1959,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   /* Attribution sits above the bottom sheet on phones */
   const placeAttribution = () => map.attributionControl.setPosition(isPhone() ? "topright" : "bottomright");
   placeAttribution();
-  phoneMq.addEventListener?.("change", placeAttribution);
+  phoneMq.addEventListener?.("change", () => { placeAttribution(); placeChrome(); });
 
   /* Theme changes restyle canvas layers and swap the automatic basemap */
   const restyle = () => {

@@ -7,6 +7,7 @@ import { $, $$, fmt, isPhone, phoneMq } from "./format.js";
 import { BASEMAPS, createMap } from "./map.js";
 import { createRoute } from "./route.js";
 import { createSearch } from "./search.js";
+import { ROUTE_SNAPS, STATION_SNAPS, makeSheet } from "./sheet.js";
 import { createStore, initialState } from "./state.js";
 import { THEMES, applyColors, currentTheme, setTheme } from "./theme.js";
 import { showError, showToast } from "./toast.js";
@@ -28,6 +29,7 @@ const POPS = [
 ];
 let popRelease = null;
 function setPop(open) {
+  if (isPhone()) return; // the popover contents sit in the drawer, always shown
   POPS.forEach((p) => {
     const on = p === open;
     p.box.hidden = !on;
@@ -38,6 +40,7 @@ function setPop(open) {
 }
 POPS.forEach((p) => p.btn.addEventListener("click", () => setPop(p.box.hidden ? p : null)));
 document.addEventListener("mousedown", (e) => {
+  if (isPhone()) return;
   const open = POPS.find((p) => !p.box.hidden);
   if (open && !open.box.contains(e.target) && !open.btn.contains(e.target)) setPop(null);
 });
@@ -108,8 +111,9 @@ async function focusStation(sid) {
   if (route.isOpen()) closeRoute();
   store.dispatch({ type: "focus", sid: s.sid });
   if (!detailRelease) detailRelease = esc.push(closeStation);
-  setSnap("peek");
-  view.fitStation(s, isPhone());
+  closeDrawer();
+  stationSheet.set("peek");
+  view.fitStation(s, isPhone() ? STATION_SNAPS.peek : 0);
 }
 function closeStation() {
   detail.close();
@@ -134,9 +138,10 @@ const route = createRoute({
 function openRoute(line) {
   if (detail.isOpen()) closeStation();
   store.dispatch({ type: "isolateLine", code: line.code });
-  view.fitLine(line, isPhone());
+  view.fitLine(line, isPhone() ? ROUTE_SNAPS.peek : 0);
   setPop(null);
-  setSnap("peek");
+  closeDrawer();
+  routeSheet.set("peek");
   route.open(line);
   if (!routeRelease) routeRelease = esc.push(closeRoute);
 }
@@ -150,46 +155,61 @@ function closeRoute() {
 /* Search */
 const search = createSearch({ onPick: focusStation, onFocus: () => setPop(null) });
 
-/* Bottom sheet on phones */
-const SNAPS = ["peek", "half", "full"];
-const panel = $("#panel");
-const handle = $("#sheet-toggle");
-function setSnap(s) {
-  panel.dataset.snap = s;
-  handle.setAttribute("aria-expanded", String(s !== "peek"));
+/* Bottom sheets on phones */
+const stationSheet = makeSheet($("#station"), $("#st-grip"), STATION_SNAPS);
+const routeSheet = makeSheet($("#route"), $("#rt-grip"), ROUTE_SNAPS);
+
+/* Drawer (phone): the sidebar slides in from the left over a scrim */
+const drawer = $("#panel");
+const scrim = $("#scrim");
+const menuBtn = $("#menu-btn");
+const pill = $("#pill");
+let drawerRelease = null;
+const isDrawerOpen = () => drawer.dataset.open === "true";
+const behindDrawer = () => [$("#map"), $("#bar"), $("#stats"), pill, $("#station"), $("#route")];
+function openDrawer() {
+  if (!isPhone() || isDrawerOpen()) return;
+  drawer.dataset.open = "true";
+  drawer.setAttribute("role", "dialog");
+  drawer.setAttribute("aria-modal", "true");
+  scrim.hidden = false;
+  behindDrawer().forEach((el) => { el.inert = true; });
+  [menuBtn, pill].forEach((el) => el.setAttribute("aria-expanded", "true"));
+  drawerRelease = esc.push(closeDrawer);
+  $("#drawer-close").focus();
 }
-const snapHeights = () => {
-  const vh = window.innerHeight;
-  return { peek: 96, half: vh * 0.52, full: vh - 74 };
-};
-let drag = null;
-handle.addEventListener("pointerdown", (e) => {
-  if (!isPhone()) return;
-  drag = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false };
-  handle.setPointerCapture(e.pointerId);
-  panel.classList.add("dragging");
-});
-handle.addEventListener("pointermove", (e) => {
-  if (!drag) return;
-  const dy = e.clientY - drag.y;
-  if (Math.abs(dy) > 6) drag.moved = true;
-  const lim = snapHeights();
-  panel.style.height = `${Math.min(lim.full, Math.max(lim.peek, drag.h - dy))}px`;
-});
-const endDrag = () => {
-  if (!drag) return;
-  const h = panel.getBoundingClientRect().height;
-  const moved = drag.moved;
-  drag = null;
-  panel.classList.remove("dragging");
-  panel.style.height = "";
-  if (!moved) return;
-  const lim = snapHeights();
-  setSnap(SNAPS.reduce((a, b) => (Math.abs(lim[b] - h) < Math.abs(lim[a] - h) ? b : a)));
-};
-handle.addEventListener("pointerup", endDrag);
-handle.addEventListener("pointercancel", endDrag);
-handle.addEventListener("click", () => setSnap(SNAPS[(SNAPS.indexOf(panel.dataset.snap) + 1) % SNAPS.length]));
+function closeDrawer() {
+  if (!isDrawerOpen()) return;
+  delete drawer.dataset.open;
+  drawer.removeAttribute("role");
+  drawer.removeAttribute("aria-modal");
+  scrim.hidden = true;
+  behindDrawer().forEach((el) => { el.inert = false; });
+  [menuBtn, pill].forEach((el) => el.setAttribute("aria-expanded", "false"));
+  if (drawerRelease) drawerRelease();
+  drawerRelease = null;
+  if (drawer.contains(document.activeElement)) menuBtn.focus();
+}
+menuBtn.addEventListener("click", openDrawer);
+pill.addEventListener("click", openDrawer);
+scrim.addEventListener("click", closeDrawer);
+$("#drawer-close").addEventListener("click", closeDrawer);
+$("#drawer-about").addEventListener("click", openAbout);
+
+/* On phones the basemap and theme lists live in the drawer footer, always shown */
+function placeChrome() {
+  const boxes = POPS.map((p) => p.box);
+  if (isPhone()) {
+    POPS.forEach((p) => p.btn.setAttribute("aria-expanded", "false"));
+    $("#drawer-foot").prepend(...boxes);
+    boxes.forEach((box) => { box.hidden = false; });
+  } else {
+    closeDrawer();
+    $("#bar").append(...boxes);
+    boxes.forEach((box) => { box.hidden = true; });
+  }
+}
+placeChrome();
 
 /* Keyboard */
 document.addEventListener("keydown", (e) => {
@@ -204,7 +224,7 @@ document.addEventListener("keydown", (e) => {
 
 const placeAttribution = () => view.setAttributionPosition(isPhone() ? "topright" : "bottomright");
 placeAttribution();
-phoneMq.addEventListener?.("change", placeAttribution);
+phoneMq.addEventListener?.("change", () => { placeAttribution(); placeChrome(); });
 
 /* Boot */
 async function boot() {
@@ -246,13 +266,28 @@ async function boot() {
 
   const widest = Math.max(...meta.bands) / 60;
   $("#k-stations").textContent = fmt(meta.counts.covered);
+  $("#p-stations").textContent = fmt(meta.counts.covered);
   $("#k-km2").textContent = fmt(meta.total_km2);
+  $("#p-km2").textContent = fmt(meta.total_km2);
   $("#about-speed").textContent = meta.walk_speed_kmh;
   $("#about-min").textContent = widest;
   $("#about-when").textContent = meta.generated_at ? new Date(meta.generated_at).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" }) : "unknown";
   $("#loading").hidden = true;
   document.body.classList.add("ready");
+  openFromHash();
 }
+
+/* Deep links: #menu opens the drawer, #station/<sid> focuses a station, #route/<code> plays a line */
+function openFromHash() {
+  const [key, value] = decodeURIComponent(location.hash.slice(1)).split("/");
+  if (key === "menu") openDrawer();
+  else if (key === "station" && model.stations.some((s) => String(s.sid) === value)) focusStation(value);
+  else if (key === "route" && value) {
+    const line = model.lines.find((l) => l.code === value);
+    if (line) openRoute(line);
+  }
+}
+window.addEventListener("hashchange", () => { if (model.meta) openFromHash(); });
 
 boot().catch((e) => {
   $("#loading .s").textContent = "The map data did not load. Reload the page.";

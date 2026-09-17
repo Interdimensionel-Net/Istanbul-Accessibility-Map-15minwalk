@@ -128,18 +128,21 @@ export function createMap(container, theme) {
     });
   }
 
-  const fitOpts = (max, phone) =>
-    phone ? { paddingTopLeft: [20, 120], paddingBottomRight: [20, 130], maxZoom: max } : { paddingTopLeft: [404, 40], paddingBottomRight: [368, 90], maxZoom: max };
+  // sheetFrac: share of the viewport a phone bottom sheet covers (0 on desktop), so the fit stays above it
+  const fitOpts = (max, sheetFrac) =>
+    sheetFrac
+      ? { paddingTopLeft: [20, 76], paddingBottomRight: [20, Math.round(window.innerHeight * sheetFrac) + 16], maxZoom: max }
+      : { paddingTopLeft: [404, 40], paddingBottomRight: [368, 90], maxZoom: max };
 
-  function fitStation(station, phone) {
+  function fitStation(station, sheetFrac) {
     const fs = bands ? bands.features.filter((f) => String(f.properties.sid) === String(station.sid)) : [];
-    if (fs.length) map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: fs }).getBounds(), fitOpts(15, phone));
+    if (fs.length) map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: fs }).getBounds(), fitOpts(15, sheetFrac));
     else map.setView([station.lat, station.lon], 14);
   }
 
-  function fitLine(line, phone) {
+  function fitLine(line, sheetFrac) {
     if (!line.coords || !line.coords.length) return;
-    map.fitBounds(L.latLngBounds(line.coords.map(([x, y]) => [y, x])), fitOpts(17, phone));
+    map.fitBounds(L.latLngBounds(line.coords.map(([x, y]) => [y, x])), fitOpts(17, sheetFrac));
   }
 
   /* Hide the walksheds of the given stations and return a setter per station for the reveal. */

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Phone layout on both pages: a hamburger opens the line list, basemap, theme and
+  about text as a left drawer over a scrim; a slim status pill replaces the stats
+  strip; the station and route sheets start at 40% and 48% of the screen and drag
+  up from a grip. Deep links `#menu`, `#station/<sid>` and `#route/<code>`.
 - FastAPI web app (`uv run walkshed-web`) that serves the precomputed artifact:
   enveloped JSON API, validated query parameters, per-route rate limits, security
   headers with a nonce-bound CSP, gzip and ETag on data files, JSON logs. Vanilla

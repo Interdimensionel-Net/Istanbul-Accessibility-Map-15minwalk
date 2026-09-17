@@ -292,6 +292,16 @@ def test_page_carries_matching_nonce(client: TestClient):
     assert other != csp
 
 
+def test_page_has_phone_chrome(client: TestClient):
+    page = client.get("/").text
+    markers = ("menu-btn", "scrim", "pill", "st-grip", "rt-grip", "drawer-foot")
+    for marker in markers:
+        assert f'id="{marker}"' in page
+    assert "onclick=" not in page
+    r = client.get("/static/js/sheet.js")
+    assert r.status_code == 200 and "javascript" in r.headers["content-type"]
+
+
 def test_static_assets(client: TestClient):
     r = client.get("/static/js/app.js")
     assert r.status_code == 200
