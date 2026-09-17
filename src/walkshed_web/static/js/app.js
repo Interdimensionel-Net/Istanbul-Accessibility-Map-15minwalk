@@ -195,6 +195,8 @@ pill.addEventListener("click", openDrawer);
 scrim.addEventListener("click", closeDrawer);
 $("#drawer-close").addEventListener("click", closeDrawer);
 $("#drawer-about").addEventListener("click", openAbout);
+$("#st-back").addEventListener("click", () => { closeStation(); openDrawer(); });
+$("#rt-back").addEventListener("click", () => { closeRoute(); openDrawer(); });
 
 /* On phones the basemap and theme lists live in the drawer footer, always shown */
 function placeChrome() {

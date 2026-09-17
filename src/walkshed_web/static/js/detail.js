@@ -47,7 +47,7 @@ export function createDetail({ onClose }) {
     panel.hidden = true;
   }
 
-  panel.querySelector(".close-btn").addEventListener("click", () => {
+  panel.querySelector(".close-btn:not(.back)").addEventListener("click", () => {
     close();
     onClose();
   });

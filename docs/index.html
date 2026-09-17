@@ -940,7 +940,7 @@ svg { display: block; }
 }
 #panel header { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); position: relative; flex: none; }
 /* Phone-only chrome: hamburger, drawer close, status pill, sheet grips, scrim */
-#menu-btn, #drawer-close, #pill, .grip, #scrim, #drawer-foot { display: none; }
+#menu-btn, #drawer-close, #pill, .grip, .back, #scrim, #drawer-foot { display: none; }
 .ttl { display: flex; align-items: center; gap: 12px; }
 .mark {
   width: 40px; height: 40px; flex: none; border-radius: 12px;
@@ -1183,9 +1183,11 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   #route { height: 48%; height: 48dvh; }
   #station[data-snap="full"], #route[data-snap="full"] { height: 88%; height: 88dvh; }
   #station.dragging, #route.dragging { transition: none !important; }
-  .grip { display: block; position: sticky; top: 0; z-index: 1; width: 100%; height: 44px; margin: 0; padding: 0; border: 0; background: transparent; touch-action: none; cursor: grab; }
+  .grip { display: block; position: sticky; top: 0; z-index: 1; width: 100%; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; appearance: none; -webkit-appearance: none; box-shadow: none; touch-action: none; cursor: grab; }
   .grip i { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto; }
-  #station .close, #route .close { top: 0; right: 8px; z-index: 2; background: transparent; }
+  #station .close, #route .close { top: 0; right: 8px; z-index: 2; background: transparent; appearance: none; -webkit-appearance: none; }
+  .back { display: grid; right: auto; left: 8px; }
+  .back svg { width: 18px; height: 18px; }
   .rt-bars { max-height: none; overflow: visible; }
   .rt-grid .v { font-size: 17px; }
 }
@@ -1292,6 +1294,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 
 <aside id="station" class="float" hidden aria-labelledby="st-name">
   <button class="grip" id="st-grip" type="button" aria-label="Resize the station sheet" aria-expanded="false"><i></i></button>
+  <button class="close back" id="st-back" type="button" aria-label="Back to the line list"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></button>
   <button class="close" type="button" aria-label="Close station"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
   <div class="eyebrow"><i aria-hidden="true"></i>Station</div>
   <h2 id="st-name">–</h2>
@@ -1314,6 +1317,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 
 <aside id="route" class="float" hidden aria-labelledby="rt-name">
   <button class="grip" id="rt-grip" type="button" aria-label="Resize the route sheet" aria-expanded="false"><i></i></button>
+  <button class="close back" id="rt-back" type="button" aria-label="Back to the line list"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg></button>
   <button class="close" type="button" aria-label="Close route"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
   <div class="eyebrow"><i aria-hidden="true"></i>Route</div>
   <h2 id="rt-name">–</h2>
@@ -1703,7 +1707,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     requestAnimationFrame(frame);
   }
   function closeRoute() { stopPlay(); routeBox.hidden = true; applyFilters(); }
-  routeBox.querySelector(".close").addEventListener("click", closeRoute);
+  routeBox.querySelector(".close:not(.back)").addEventListener("click", closeRoute);
   $("#rt-replay").addEventListener("click", () => {
     const code = [...state.lines][0];
     const l = meta && meta.lines.find((x) => x.line === code);
@@ -1752,7 +1756,9 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   }
   function closeStation() { clearFocus(); applyFilters(); }
 
-  $("#station .close").addEventListener("click", closeStation);
+  $("#station .close:not(.back)").addEventListener("click", closeStation);
+  $("#st-back").addEventListener("click", () => { closeStation(); openDrawer(); });
+  $("#rt-back").addEventListener("click", () => { closeRoute(); openDrawer(); });
   $$("[data-band]").forEach((b) => b.addEventListener("click", () => {
     const v = +b.dataset.band;
     if (state.bands.has(v)) state.bands.delete(v); else state.bands.add(v);

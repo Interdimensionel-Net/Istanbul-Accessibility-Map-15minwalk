@@ -86,7 +86,7 @@ export function createRoute({ view, model, onClose }) {
     box.hidden = true;
   }
 
-  box.querySelector(".close-btn").addEventListener("click", () => {
+  box.querySelector(".close-btn:not(.back)").addEventListener("click", () => {
     close();
     onClose();
   });
