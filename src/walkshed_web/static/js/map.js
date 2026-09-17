@@ -23,6 +23,7 @@ export function createMap(container, theme) {
   map.createPane("land").style.zIndex = 150;
   map.createPane("basemap").style.zIndex = 180;
   map.createPane("bands").style.zIndex = 390;
+  map.createPane("hi").style.zIndex = 395;
   L.control.zoom({ position: "bottomright" }).addTo(map);
 
   let tokens = mapTokens(theme.colors);
@@ -117,7 +118,7 @@ export function createMap(container, theme) {
     layers.stations.eachLayer((mk) => {
       const s = stationsById.get(mk.sid);
       const on = !state.focus && isSelected(state, s);
-      const isFocus = state.focus === mk.sid;
+      const isFocus = state.focus === mk.sid || routeStop === mk.sid;
       mk.setStyle({
         radius: isFocus ? 6 : 3.5,
         color: tokens.markerStroke,
@@ -143,6 +144,38 @@ export function createMap(container, theme) {
   function fitLine(line, sheetFrac) {
     if (!line.coords || !line.coords.length) return;
     map.fitBounds(L.latLngBounds(line.coords.map(([x, y]) => [y, x])), fitOpts(17, sheetFrac));
+  }
+
+  /* A stop picked in the route panel: the line stays shown, this walkshed gets a strong outline and a closer zoom. */
+  let routeStop = null;
+  let stopHi = null;
+  function markStop(sid, on) {
+    layers.stations.eachLayer((mk) => {
+      if (mk.sid === sid) mk.setStyle({ radius: on ? 6 : 3.5, fillColor: on ? tokens.focus : tokens.marker });
+    });
+  }
+  function clearStop() {
+    if (stopHi) map.removeLayer(stopHi);
+    stopHi = null;
+    if (routeStop) markStop(routeStop, false);
+    routeStop = null;
+  }
+  function highlightStop(sid, sheetFrac) {
+    const key = String(sid);
+    const fs = bands ? bands.features.filter((f) => String(f.properties.sid) === key) : [];
+    clearStop();
+    routeStop = key;
+    markStop(key, true);
+    const s = stationsById.get(key);
+    if (!fs.length) {
+      if (s) map.setView([s.lat, s.lon], 14);
+      return;
+    }
+    stopHi = L.geoJSON(
+      { type: "FeatureCollection", features: fs },
+      { pane: "hi", interactive: false, style: { color: tokens.focus, weight: 4, opacity: 1, fillColor: tokens.focus, fillOpacity: 0.16, lineJoin: "round" } }
+    ).addTo(map);
+    map.fitBounds(stopHi.getBounds(), fitOpts(15, sheetFrac));
   }
 
   /* Hide the walksheds of the given stations and return a setter per station for the reveal. */
@@ -192,6 +225,9 @@ export function createMap(container, theme) {
     fitStation,
     fitLine,
     routeLayers,
+    highlightStop,
+    clearStop,
+    routeStop: () => routeStop,
     setTheme,
     setBase,
     basePick: () => basePick,

@@ -1107,7 +1107,10 @@ a.btn { text-decoration: none; color: var(--on-ink); }
 .rt-grid .v { font: 800 20px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .rt-grid .l { font-size: 11px; font-weight: 600; color: var(--ink-3); margin-top: 3px; }
 .rt-bars { display: grid; grid-template-columns: minmax(0, 1.5fr) 2fr auto; gap: 4px 8px; align-items: center; font-size: 11.5px; max-height: 34vh; overflow-y: auto; margin-bottom: 12px; }
-.rt-bars .nm { color: var(--ink-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-bars .nm { color: var(--ink-2); font: inherit; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; text-align: left; border: 0; background: transparent; padding: 3px 5px; margin: -3px -5px; border-radius: 5px; cursor: pointer; }
+.rt-bars .nm:hover { background: var(--surface-2); color: var(--ink); }
+.rt-bars .nm[aria-pressed="true"] { background: var(--focus-soft); color: var(--focus); }
+.rt-bars .nm[disabled] { cursor: default; background: transparent; }
 .rt-bars .bar { height: 7px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
 .rt-bars .bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rt-color, var(--accent)); }
 .rt-bars .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-2); }
@@ -1190,6 +1193,8 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   .back svg { width: 18px; height: 18px; }
   .rt-bars { max-height: none; overflow: visible; }
   .rt-grid .v { font-size: 17px; }
+  .rt-bars { gap: 2px 8px; }
+  .rt-bars .nm { min-height: 32px; }
 }
 
 /* Motion */
@@ -1338,7 +1343,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
     Replay
   </button>
-  <p class="hint">Press the play button of any line in the list to play its route.</p>
+  <p class="hint">Tap a stop name to zoom to its walkshed. Press the play button of any line to play its route.</p>
 </aside>
 
 <script>
@@ -1479,6 +1484,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     });
 
     map.createPane("bands").style.zIndex = 390;
+    map.createPane("hi").style.zIndex = 395;
     edgeLayer = L.geoJSON(bands, { pane: "bands", style: edgeStyle, interactive: false }).addTo(map);
     bandLayer = L.geoJSON(bands, { pane: "bands", style: bandStyle, interactive: false }).addTo(map);
     const lineStyle = (code) => ({ color: lineColor(code), weight: 3, opacity: 0.9, interactive: false, lineJoin: "round", lineCap: "round", smoothFactor: 0.8 });
@@ -1512,10 +1518,15 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   }
 
   function openFromHash() {
-    const [key, value] = decodeURIComponent(location.hash.slice(1)).split("/");
+    const [key, value, stop] = decodeURIComponent(location.hash.slice(1)).split("/");
     if (key === "menu") openDrawer();
     else if (key === "station" && stationsById.has(value)) focusStation(value);
-    else if (key === "route" && value) { const l = meta.lines.find((x) => x.line === value); if (l) openRoute(l); }
+    else if (key === "route" && value) {
+      const l = meta.lines.find((x) => x.line === value);
+      if (!l) return;
+      openRoute(l);
+      if (stop) map.once("moveend", () => document.querySelector(`#rt-bars .nm[data-sid="${CSS.escape(stop)}"]`)?.click());
+    }
   }
   window.addEventListener("hashchange", () => { if (meta) openFromHash(); });
 
@@ -1537,7 +1548,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     stationLayer.eachLayer((mk) => {
       const s = stationsById.get(mk.sid);
       const on = !state.focus && selected(s);
-      const isFocus = state.focus === mk.sid;
+      const isFocus = state.focus === mk.sid || routeStop === mk.sid;
       mk.setStyle({ radius: isFocus ? 6 : 3.5, color: ink, fillColor: isFocus ? css("--focus") : "#fff", opacity: on || isFocus ? 1 : 0.15, fillOpacity: on || isFocus ? 1 : 0.15 });
     });
     $$(".line").forEach((btn) => btn.setAttribute("aria-pressed", state.lines.has(btn.dataset.line)));
@@ -1639,8 +1650,46 @@ a.btn { text-decoration: none; color: var(--on-ink); }
   let play = null;
   const routeBox = $("#route");
   function stopPlay() { if (play) { play.cancelled = true; play = null; } }
+  /* A stop picked in the route panel: the line stays shown, this walkshed gets a strong outline and a closer zoom */
+  let routeStop = null;
+  let stopHi = null;
+  function markStop(sid, on) {
+    stationLayer.eachLayer((mk) => {
+      if (mk.sid === sid) mk.setStyle({ radius: on ? 6 : 3.5, fillColor: on ? css("--focus") : "#fff" });
+    });
+    $$("#rt-bars .nm[data-sid]").forEach((b) => { if (b.dataset.sid === sid) b.setAttribute("aria-pressed", String(on)); });
+  }
+  function clearStop() {
+    if (stopHi) { map.removeLayer(stopHi); stopHi = null; }
+    if (routeStop) markStop(routeStop, false);
+    routeStop = null;
+  }
+  function highlightStop(sid) {
+    const fs = bands.features.filter((f) => String(f.properties.sid) === sid);
+    clearStop();
+    routeStop = sid;
+    markStop(sid, true);
+    const s = stationsById.get(sid);
+    if (!fs.length) { if (s) map.setView([s.lat, s.lon], 14); return; }
+    const focus = css("--focus");
+    stopHi = L.geoJSON({ type: "FeatureCollection", features: fs }, {
+      pane: "hi", interactive: false,
+      style: { color: focus, weight: 4, opacity: 1, fillColor: focus, fillOpacity: 0.16, lineJoin: "round" },
+    }).addTo(map);
+    map.fitBounds(stopHi.getBounds(), fitOpts(15, ROUTE_SNAPS.peek));
+  }
+  $("#rt-bars").addEventListener("click", (e) => {
+    const b = e.target.closest(".nm[data-sid]");
+    if (!b) return;
+    const l = meta.lines.find((x) => state.lines.has(x.line));
+    if (routeStop === b.dataset.sid) { clearStop(); if (l) zoomToLine(l); return; }
+    highlightStop(b.dataset.sid);
+    routeSheet.set("peek");
+  });
+
   function openRoute(l) {
     stopPlay();
+    clearStop();
     clearFocus();
     state.lines = new Set([l.line]);
     applyFilters();
@@ -1664,7 +1713,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     $("#rt-bars").style.setProperty("--rt-color", lineColor(l.line));
     const max = Math.max(1, ...perStop);
     $("#rt-bars").innerHTML = stops.map((s, i) =>
-      `<span class="nm${sids[i] ? "" : " none"}" title="${esc(s.name)}">${esc(s.name)}</span><span class="bar"><i data-i="${i}"></i></span><span class="v">${sids[i] ? fmt(perStop[i], 2) : "–"}</span>`
+      `<button type="button" class="nm${sids[i] ? "" : " none"}" title="${esc(s.name)}" aria-pressed="false"${sids[i] ? ` data-sid="${esc(sids[i])}"` : " disabled"}>${esc(s.name)}</button><span class="bar"><i data-i="${i}"></i></span><span class="v">${sids[i] ? fmt(perStop[i], 2) : "–"}</span>`
     ).join("");
     routeBox.hidden = false;
     closeDrawer();
@@ -1706,7 +1755,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     }
     requestAnimationFrame(frame);
   }
-  function closeRoute() { stopPlay(); routeBox.hidden = true; applyFilters(); }
+  function closeRoute() { stopPlay(); clearStop(); routeBox.hidden = true; applyFilters(); }
   routeBox.querySelector(".close:not(.back)").addEventListener("click", closeRoute);
   $("#rt-replay").addEventListener("click", () => {
     const code = [...state.lines][0];
@@ -1724,6 +1773,7 @@ a.btn { text-decoration: none; color: var(--on-ink); }
     const s = stationsById.get(String(sid));
     if (!s) return;
     stopPlay();
+    clearStop();
     routeBox.hidden = true;
     state.focus = String(s.sid);
     const k = km2ById.get(state.focus) || {};

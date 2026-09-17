@@ -1,10 +1,11 @@
 /* Route panel: isolate a line, reveal each stop's walkshed in order, count the numbers up. */
-import { $, chip, esc, fmt } from "./format.js";
+import { $, $$, chip, esc, fmt, isPhone } from "./format.js";
 import { lineColor } from "./lineColors.js";
+import { ROUTE_SNAPS } from "./sheet.js";
 
 const FADE_MS = 380;
 
-export function createRoute({ view, model, onClose }) {
+export function createRoute({ view, model, onClose, onPickStop = () => {} }) {
   const box = $("#route");
   let play = null;
   let current = null;
@@ -32,7 +33,7 @@ export function createRoute({ view, model, onClose }) {
     const bars = $("#rt-bars");
     bars.style.setProperty("--rt-color", lineColor(line.code));
     bars.innerHTML = stops
-      .map((s, i) => `<span class="nm${sids[i] ? "" : " none"}" title="${esc(s.name)}">${esc(s.name)}</span><span class="bar"><i data-i="${i}"></i></span><span class="v">${sids[i] ? fmt(perStop[i], 2) : "–"}</span>`)
+      .map((s, i) => `<button type="button" class="nm${sids[i] ? "" : " none"}" title="${esc(s.name)}" aria-pressed="false"${sids[i] ? ` data-sid="${esc(sids[i])}"` : " disabled"}>${esc(s.name)}</button><span class="bar"><i data-i="${i}"></i></span><span class="v">${sids[i] ? fmt(perStop[i], 2) : "–"}</span>`)
       .join("");
   }
 
@@ -70,6 +71,7 @@ export function createRoute({ view, model, onClose }) {
   }
 
   function open(line) {
+    view.clearStop();
     current = line;
     const stops = line.stops || [];
     const sids = stops.map((s) => (s.sid == null ? null : String(s.sid)));
@@ -82,6 +84,7 @@ export function createRoute({ view, model, onClose }) {
 
   function close() {
     cancel();
+    view.clearStop();
     current = null;
     box.hidden = true;
   }
@@ -91,6 +94,22 @@ export function createRoute({ view, model, onClose }) {
     onClose();
   });
   $("#rt-replay").addEventListener("click", () => current && open(current));
+
+  /* Stop names: a click keeps the line shown, outlines this walkshed and zooms to it; a second click zooms back. */
+  const sheetFrac = () => (isPhone() ? ROUTE_SNAPS.peek : 0);
+  const syncPressed = () => $$("#rt-bars .nm[data-sid]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sid === view.routeStop())));
+  $("#rt-bars").addEventListener("click", (e) => {
+    const b = e.target.closest(".nm[data-sid]");
+    if (!b || !current) return;
+    if (view.routeStop() === b.dataset.sid) {
+      view.clearStop();
+      view.fitLine(current, sheetFrac());
+    } else {
+      view.highlightStop(b.dataset.sid, sheetFrac());
+      onPickStop();
+    }
+    syncPressed();
+  });
 
   return Object.freeze({ open, close, cancel, isOpen: () => !box.hidden, current: () => current });
 }

@@ -129,6 +129,7 @@ let routeRelease = null;
 const route = createRoute({
   view,
   model,
+  onPickStop: () => routeSheet.set("peek"),
   onClose: () => {
     if (routeRelease) routeRelease();
     routeRelease = null;
@@ -281,12 +282,14 @@ async function boot() {
 
 /* Deep links: #menu opens the drawer, #station/<sid> focuses a station, #route/<code> plays a line */
 function openFromHash() {
-  const [key, value] = decodeURIComponent(location.hash.slice(1)).split("/");
+  const [key, value, stop] = decodeURIComponent(location.hash.slice(1)).split("/");
   if (key === "menu") openDrawer();
   else if (key === "station" && model.stations.some((s) => String(s.sid) === value)) focusStation(value);
   else if (key === "route" && value) {
     const line = model.lines.find((l) => l.code === value);
-    if (line) openRoute(line);
+    if (!line) return;
+    openRoute(line);
+    if (stop) view.map.once("moveend", () => document.querySelector(`#rt-bars .nm[data-sid="${CSS.escape(stop)}"]`)?.click());
   }
 }
 window.addEventListener("hashchange", () => { if (model.meta) openFromHash(); });
